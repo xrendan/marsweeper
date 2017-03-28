@@ -6,11 +6,27 @@ class App:
         self._running = True
         self._display_surf = None
         self.size = self.weight, self.height = 640, 400
+        self.square = 20
+        self.margin = 5
+        self.grid_colour = (124, 124, 124)
 
     def on_init(self):
         pygame.init()
-        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+        self._display_surf = pygame.display.set_mode(self.size)
         self._running = True
+        for row in range(10):
+            for column in range(10):
+                # print("PRINT")
+                pygame.draw.rect(
+                          self._display_surf,
+                          self.grid_colour,
+                          [(self.margin + self.square) * column + self.margin,
+                          (self.margin + self.square) * row + self.margin,
+                          self.square,
+                          self.square]
+                )
+        pygame.display.update()
+
 
     def on_event(self, event):
         if event.type == pygame.QUIT:
