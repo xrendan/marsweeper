@@ -68,3 +68,5 @@ class Board:
 
     def getState(self, row, col):
         pass
+if __name__ == '__main__' :
+    print("insert test code here")
