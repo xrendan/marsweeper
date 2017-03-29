@@ -1,4 +1,4 @@
-from random import randint
+from random import randrange
 
 class Cell:
     '''
@@ -47,9 +47,11 @@ class Board:
             for j in range(-1,2):
                 disallowed.append((start_row + i, start_col + j))
         while mines_left > 0:
-            to_place = (randint(0, self.width), randint(0, self.height))
+            to_place = (randrange(0, self.width), randrange(0, self.height))
+            print(to_place, to_place in disallowed)
             if to_place not in disallowed:
-                array[to_place[0]][to_place[1]] = Cell(-1)
+                disallowed.append(to_place)
+                self.array[to_place[0]][to_place[1]] = Cell(-1)
                 mines_left -= 1
 
         if self.debug:
@@ -57,9 +59,9 @@ class Board:
                 for j in range(self.height):
                     temp = self.array[i][j]
                     if type(temp) == Cell:
-                        value == temp.value
+                        value = temp.value
                     else:
-                        value == temp
+                        value = temp
                     print(value, end=" ")
                 print()
 
