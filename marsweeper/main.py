@@ -6,14 +6,16 @@ class App:
         self._running = True
         self._display_surf = None
         self.size = self.weight, self.height = 640, 400
-        self.square = 20
+        self.square = 40
         self.margin = 5
-        self.grid_colour = (124, 124, 124)
+        self.grid_colour = (255, 255, 255)
 
     def on_init(self):
         pygame.init()
-        self._display_surf = pygame.display.set_mode(self.size)
+        self._display_surf = pygame.display.set_mode(self.size, RESIZABLE)
         self._running = True
+
+    def render_grid(self):
         for row in range(10):
             for column in range(10):
                 # print("PRINT")
@@ -26,8 +28,7 @@ class App:
                           self.square]
                 )
         pygame.display.update()
-
-
+        
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
