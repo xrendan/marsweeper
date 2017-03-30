@@ -61,7 +61,7 @@ class Board:
                     if type(temp) == Cell:
                         value = temp.value
                     else:
-                        value = temp
+                        value = " " + str(temp)
                     print(value, end=" ")
                 print()
 
