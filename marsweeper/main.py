@@ -12,7 +12,7 @@ class App:
 
     def on_init(self):
         pygame.init()
-        self._display_surf = pygame.display.set_mode(self.size, RESIZABLE)
+        self._display_surf = pygame.display.set_mode(self.size)
         self._running = True
 
     def render_grid(self):
@@ -46,7 +46,10 @@ class App:
     def on_execute(self):
         if self.on_init() == False:
             self._running == False
-
+        self.render_grid()
+        pygame.display.set_caption("MARSWEEPER")
+        self.size = self.size = self.weight, self.height = 1000, 1200
+        self._display_surf = pygame.display.set_mode(self.size)
         while (self._running):
             for event in pygame.event.get():
                 self.on_event(event)
