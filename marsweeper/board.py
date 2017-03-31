@@ -53,13 +53,11 @@ class Board:
         for i in range(-1,2):
             for j in range(-1,2):
                 # get rid of areas surrounding starting locations
-                try:
-                    allowed.append((start_row + i, start_col + j))
-                except:
-                    pass
-        allowed.remove((start_row, start_col)) #cant place a mine at start click
-        self.array[start_row][start_col] = Cell(0) #place cell
-        self.array[start_row][start_col].setstate(1) #uncover it
+                if (start_row + i) >= 0 and (start_row + i) < self.width and (start_col + j) >= 0 and (start_col + j) < self.height:
+                    allowed.remove((start_row + i, start_col + j))
+                    self.array[start_row + i][start_col + j] = Cell(0) #place cell
+
+        self.array[start_row][start_col].setstate(1) #uncover initial cell
         while mines_left > 0 and len(allowed):
             to_place = randrange(0, len(allowed)) #where we will place a mine
             targ = allowed[to_place] #get co-ords
@@ -74,23 +72,12 @@ class Board:
                 cur = self.array[i][j]
                 if cur.getvalue() != -1:
                     spots = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
-                    #list comp creates a list of the 9 spots around our cur position
+                    #list comp creates a list of the 8 spots around our cur position
                     #that are on the board
                     for spot in spots:
                         if self.array[spot[0]][spot[1]].getvalue() == -1:
                             cur.addvalue(1)
-        if self.debug:
-            for i in range(self.width):
-                for j in range(self.height):
-                    temp = self.array[i][j]
-                    if type(temp) != type(Cell(2)):
-                        print(str(i) + " " + str(j))
-                        exit() #quality error handling
-                    if temp.getvalue() == -1:
-                        print("-1", end=" ")
-                    elif temp.getvalue() == 0:
-                        print(" 0",end=" ")
-                print()
+
     def cmdPrintBoard(self):
         #prints the board without hiding anything
         for i in range(self.width):
