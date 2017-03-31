@@ -65,18 +65,18 @@ class Board:
         for i in range(self.width):
             for j in range(self.height):
                 cur = self.array[i][j]
-                if cur.getvalue()!=-1:
+                if cur.getvalue() != -1:
                     spots = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
                     for spot in spots:
-                        if self.array[spot[0]][spot[1]].getvalue() ==-1:
+                        if self.array[spot[0]][spot[1]].getvalue() == -1:
                             cur.addvalue(1)
         if self.debug:
             for i in range(self.width):
                 for j in range(self.height):
                     temp = self.array[i][j]
-                    if type(temp)!=type(Cell(2)):
-                        print(str(i)+" "+str(j))
-                        exit()#quality error handling
+                    if type(temp) != type(Cell(2)):
+                        print(str(i) + " " + str(j))
+                        exit() #quality error handling
                     if temp.getvalue() == -1:
                         print("-1", end=" ")
                     elif temp.getvalue() == 0:
