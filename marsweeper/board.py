@@ -17,6 +17,10 @@ class Cell:
         return self.value
     def setstate(self,new):
         self.state = new
+    def setvalue(self,new):
+        self.value = new
+    def addvalue(self,plus):
+        self.value+=plus
 
 
 class Board:
@@ -39,7 +43,7 @@ class Board:
         self.height = height
         self.mines = mines
         self.win_condition = 0
-        self.debug = True
+        self.debug = False
         self.array = []
     def generate(self,start_row, start_col):
         '''Creates a minefield with a starting position'''
@@ -58,19 +62,48 @@ class Board:
         for inc in range(len(allowed)):
             targ = allowed[inc]
             self.array[targ[0]][targ[1]] = Cell(0)
+        for i in range(self.width):
+            for j in range(self.height):
+                cur = self.array[i][j]
+                if cur.getvalue()!=-1:
+                    spots = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
+                    for spot in spots:
+                        if self.array[spot[0]][spot[1]].getvalue() ==-1:
+                            cur.addvalue(1)
         if self.debug:
             for i in range(self.width):
                 for j in range(self.height):
-                    temp = self.array[j][i]
+                    temp = self.array[i][j]
                     if type(temp)!=type(Cell(2)):
                         print(str(i)+" "+str(j))
                         exit()#quality error handling
-                    print(" " + str(temp.getvalue()), end=" ")
+                    if temp.getvalue() == -1:
+                        print("-1", end=" ")
+                    elif temp.getvalue() == 0:
+                        print(" 0",end=" ")
                 print()
-
+    def cmdPrintBoard(self):
+        for i in range(self.width):
+            for j in range(self.height):
+                temp = self.array[j][i]
+                if temp.getvalue() == -1:
+                    print("-1", end=" ")
+                else:
+                    print(" "+ str(temp.getvalue()),end=" ")
+            print()
+    def cmdPrintActiveBoard(self):
+        for i in range(self.width):
+            for j in range(self.height):
+                temp = self.array[j][i]
+                if temp.state() == -1:
+                    print(" F", end=" ")#not done here
+                else:
+                    print(" "+ str(temp.getvalue()),end=" ")
+            print()
     def getState(self, row, col):
-        pass#return self.array[row][col]
+        return self.array[row][col].state
 if __name__ == '__main__':
-    bored = Board(10,10,26)
-    bored.generate(5,5)
-    #print(bored.getState(5,5))
+    bored = Board(5,5,4)
+    bored.generate(3,4)
+    bored.cmdPrintBoard()
+    #print(bored.getState(4,4))
