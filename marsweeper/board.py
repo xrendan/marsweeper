@@ -70,7 +70,7 @@ class Board:
 
     def getState(self, row, col):
         pass#return self.array[row][col]
-if __name__ == '__main__' :
+if __name__ == '__main__':
     bored = Board(10,10,26)
     bored.generate(5,5)
     #print(bored.getState(5,5))
