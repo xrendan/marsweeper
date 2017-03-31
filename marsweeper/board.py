@@ -37,13 +37,13 @@ class Board:
     a board is created such that the first tile has no mines  surrounding the
     starting tile
     '''
-    def __init__(self, width, height, mines):
+    def __init__(self, width, height, mines, debug=False):
         self.changes = []
         self.width = width
         self.height = height
         self.mines = mines
         self.win_condition = 0
-        self.debug = False
+        self.debug = debug
         self.array = []
     def generate(self,start_row, start_col):
         '''Creates a minefield with a starting position'''
@@ -102,6 +102,19 @@ class Board:
             print()
     def getState(self, row, col):
         return self.array[row][col].state
+
+    def checkCell(self, row, col):
+        if self.array[row][col].state == -1:
+            print("Invalid: has flag")
+        elif self.array[row][col].state == 1:
+            print("Already uncovered")
+        else:
+            self.array[row][col].state = 1
+        if self.debug:
+            self.cmdPrintActiveBoard()
+            # return self.array[row][col].getvalue()
+    def toggleFlag(self, row, col):
+        self.array[row][col].state = -1:
 if __name__ == '__main__':
     bored = Board(5,5,4)
     bored.generate(3,4)
