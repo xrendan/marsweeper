@@ -127,7 +127,7 @@ class Board:
         if self.debug:
             self.cmdPrintActiveBoard()
             # return self.array[row][col].getvalue()
-        if chkwin:
+        if chkwin:#so we dont check on every internal checkcell
             return checkWinCondition()#may or may not have won?
         #this is ignored during recursive calls
     def toggleFlag(self, row, col):
@@ -151,4 +151,3 @@ if __name__ == '__main__':
     bored.cmdPrintBoard()
     print("\nActive\n")
     bored.cmdPrintActiveBoard()
-    #print(bored.getState(4,4))
