@@ -13,6 +13,10 @@ class Cell:
     def __init__(self, value):
         self.value = value
         self.state = 0
+    def getvalue(self):
+        return self.value
+    def setstate(self,new):
+        self.state = new
 
 
 class Board:
@@ -36,58 +40,37 @@ class Board:
         self.mines = mines
         self.win_condition = 0
         self.debug = True
-
-    def generate(self, start_row, start_col):
-        self.array = [[0 for x in range(self.width)] for y in range(self.height)]
-        mines_left = self.mines
-        # some of these might be out of range but it doesn't matter since the
-        # mine placement algorithm will never place a mine there.
-        disallowed = []
-        for i in range(-1,2):
-            for j in range(-1,2):
-                disallowed.append((start_row + i, start_col + j))
-        while mines_left > 0:
-            to_place = (randrange(0, self.width), randrange(0, self.height))
-            print(to_place, to_place in disallowed)
-            if to_place not in disallowed:
-                disallowed.append(to_place)
-                self.array[to_place[0]][to_place[1]] = Cell(-1)
-                mines_left -= 1
-
-        if self.debug:
-            for i in range(self.width):
-                for j in range(self.height):
-                    temp = self.array[i][j]
-                    if type(temp) == Cell:
-                        value = temp.value
-                    else:
-                        value = " " + str(temp)
-                    print(value, end=" ")
-                print()
-    def generate_mines(self):
+        self.array = []
+    def generate(self,start_row, start_col):
+        '''Creates a minefield with a starting position'''
         self.array = [[0 for x in range(self.width)] for y in range(self.height)]
         mines_left = self.mines
         allowed = [(x,y) for x in range(0,self.width) for y in range(self.height)] #a list of where the mines can go
+        allowed.remove((start_row, start_col))
+        self.array[start_row][start_col] = Cell(0)
+        self.array[start_row][start_col].setstate(1)
         while mines_left > 0 and len(allowed):
             to_place = randrange(0, len(allowed))
             targ = allowed[to_place]
             self.array[targ[0]][targ[1]] = Cell(-1)
             allowed.remove(targ) #this gets really slow after about 100 mines
             mines_left -= 1 #but who wants to play that?
-
+        for inc in range(len(allowed)):
+            targ = allowed[inc]
+            self.array[targ[0]][targ[1]] = Cell(0)
         if self.debug:
             for i in range(self.width):
                 for j in range(self.height):
-                    temp = self.array[i][j]
-                    if type(temp) == Cell:
-                        value = temp.value
-                    else:
-                        value = " " + str(temp)
-                    print(value, end=" ")
+                    temp = self.array[j][i]
+                    if type(temp)!=type(Cell(2)):
+                        print(str(i)+" "+str(j))
+                        exit()#quality error handling
+                    print(" " + str(temp.getvalue()), end=" ")
                 print()
 
     def getState(self, row, col):
-        pass
+        pass#return self.array[row][col]
 if __name__ == '__main__' :
-    bored = Board(20,20,26)
-    bored.generate_mines()
+    bored = Board(10,10,26)
+    bored.generate(5,5)
+    #print(bored.getState(5,5))
