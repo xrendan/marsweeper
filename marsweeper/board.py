@@ -134,7 +134,7 @@ class Board:
         self.array[row][col].state = -1
     def checkWinCondition(self):
         #win by uncover?
-        if len(self.mines) == self.uncovered:
+        if len(self.mines_loc) == self.uncovered:
             return 1 #you had to have won, as you would have lost
             #when you uncovered a mine
         #win by flags?
