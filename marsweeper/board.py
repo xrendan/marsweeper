@@ -47,26 +47,28 @@ class Board:
         self.array = []
     def generate(self,start_row, start_col):
         '''Creates a minefield with a starting position'''
-        self.array = [[0 for x in range(self.width)] for y in range(self.height)]
+        self.array = [[0 for x in range(self.width)] for y in range(self.height)] #generate field
         mines_left = self.mines
         allowed = [(x,y) for x in range(0,self.width) for y in range(self.height)] #a list of where the mines can go
-        allowed.remove((start_row, start_col))
-        self.array[start_row][start_col] = Cell(0)
-        self.array[start_row][start_col].setstate(1)
+        allowed.remove((start_row, start_col)) #cant place a mine at start click
+        self.array[start_row][start_col] = Cell(0) #place cell
+        self.array[start_row][start_col].setstate(1) #uncover it
         while mines_left > 0 and len(allowed):
-            to_place = randrange(0, len(allowed))
-            targ = allowed[to_place]
-            self.array[targ[0]][targ[1]] = Cell(-1)
+            to_place = randrange(0, len(allowed)) #where we will place a mine
+            targ = allowed[to_place] #get co-ords
+            self.array[targ[0]][targ[1]] = Cell(-1) #place mine
             allowed.remove(targ) #this gets really slow after about 100 mines
             mines_left -= 1 #but who wants to play that?
-        for inc in range(len(allowed)):
+        for inc in range(len(allowed)): #fill empty space with empty cells
             targ = allowed[inc]
             self.array[targ[0]][targ[1]] = Cell(0)
-        for i in range(self.width):
+        for i in range(self.width): #now to fill in value of nearby mines
             for j in range(self.height):
                 cur = self.array[i][j]
                 if cur.getvalue() != -1:
                     spots = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
+                    #list comp creates a list of the 9 spots around our cur position
+                    #that are on the board
                     for spot in spots:
                         if self.array[spot[0]][spot[1]].getvalue() == -1:
                             cur.addvalue(1)
@@ -83,6 +85,7 @@ class Board:
                         print(" 0",end=" ")
                 print()
     def cmdPrintBoard(self):
+        #prints the board without hiding anything
         for i in range(self.width):
             for j in range(self.height):
                 temp = self.array[j][i]
@@ -92,13 +95,16 @@ class Board:
                     print(" "+ str(temp.getvalue()),end=" ")
             print()
     def cmdPrintActiveBoard(self):
+        #prints the board as seen by the user
         for i in range(self.width):
             for j in range(self.height):
                 temp = self.array[j][i]
-                if temp.state() == -1:
-                    print(" F", end=" ")#not done here
+                if temp.state == -1:
+                    print(" F", end=" ")#print flags
+                elif temp.state == 1:
+                    print(" "+ str(temp.getvalue()),end=" ")#print nearby mines
                 else:
-                    print(" "+ str(temp.getvalue()),end=" ")
+                    print(" ?",end = " ") #covered square
             print()
     def getState(self, row, col):
         return self.array[row][col].state
@@ -106,4 +112,6 @@ if __name__ == '__main__':
     bored = Board(5,5,4)
     bored.generate(3,4)
     bored.cmdPrintBoard()
+    print("\nActive\n")
+    bored.cmdPrintActiveBoard()
     #print(bored.getState(4,4))
