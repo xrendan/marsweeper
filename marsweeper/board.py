@@ -64,9 +64,30 @@ class Board:
                         value = " " + str(temp)
                     print(value, end=" ")
                 print()
+    def generate_mines(self):
+        self.array = [[0 for x in range(self.width)] for y in range(self.height)]
+        mines_left = self.mines
+        allowed = [(x,y) for x in range(0,self.width) for y in range(self.height)] #a list of where the mines can go
+        while mines_left > 0 and len(allowed):
+            to_place = randrange(0, len(allowed))
+            targ = allowed[to_place]
+            self.array[targ[0]][targ[1]] = Cell(-1)
+            allowed.remove(targ) #this gets really slow after about 100 mines
+            mines_left -= 1 #but who wants to play that?
 
+        if self.debug:
+            for i in range(self.width):
+                for j in range(self.height):
+                    temp = self.array[i][j]
+                    if type(temp) == Cell:
+                        value = temp.value
+                    else:
+                        value = " " + str(temp)
+                    print(value, end=" ")
+                print()
 
     def getState(self, row, col):
         pass
 if __name__ == '__main__' :
-    print("insert test code here ")
+    bored = Board(20,20,26)
+    bored.generate_mines()
