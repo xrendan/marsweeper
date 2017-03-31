@@ -28,7 +28,7 @@ class App:
                           self.square]
                 )
         pygame.display.update()
-        
+
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
