@@ -56,8 +56,6 @@ class Board:
                 if (start_row + i) >= 0 and (start_row + i) < self.width and (start_col + j) >= 0 and (start_col + j) < self.height:
                     allowed.remove((start_row + i, start_col + j))
                     self.array[start_row + i][start_col + j] = Cell(0) #place cell
-
-        self.array[start_row][start_col].setstate(1) #uncover initial cell
         while mines_left > 0 and len(allowed):
             to_place = randrange(0, len(allowed)) #where we will place a mine
             targ = allowed[to_place] #get co-ords
@@ -77,7 +75,7 @@ class Board:
                     for spot in spots:
                         if self.array[spot[0]][spot[1]].getvalue() == -1:
                             cur.addvalue(1)
-
+        self.checkCell(start_row,start_col)
     def cmdPrintBoard(self):
         #prints the board without hiding anything
         for i in range(self.width):
@@ -107,17 +105,25 @@ class Board:
         if self.array[row][col].state == -1:
             print("Invalid: has flag")
         elif self.array[row][col].state == 1:
-            print("Already uncovered")
+            pass
+            #print("Already uncovered")#we just ignore that
         else:
             self.array[row][col].state = 1
+            if self.array[row][col].getvalue() == 0:
+                #we need to try to uncover the surrounding cells
+                spots = [(x,y) for x in range(max(0,row-1),min(self.width,row+2)) for y in range(max(0,col-1),min(self.height,col+2))]
+                #list comp creates a list of the 8 spots around our cur position
+                #that are on the board
+                for spot in spots:
+                    self.checkCell(spot[0],spot[1]) #recursivly find open spaces and uncover them
         if self.debug:
             self.cmdPrintActiveBoard()
             # return self.array[row][col].getvalue()
     def toggleFlag(self, row, col):
-        self.array[row][col].state = -1:
+        self.array[row][col].state = -1
 if __name__ == '__main__':
-    bored = Board(5,5,4)
-    bored.generate(3,4)
+    bored = Board(10,10,25)
+    bored.generate(3,3)
     bored.cmdPrintBoard()
     print("\nActive\n")
     bored.cmdPrintActiveBoard()
