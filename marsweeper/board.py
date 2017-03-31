@@ -50,6 +50,13 @@ class Board:
         self.array = [[0 for x in range(self.width)] for y in range(self.height)] #generate field
         mines_left = self.mines
         allowed = [(x,y) for x in range(0,self.width) for y in range(self.height)] #a list of where the mines can go
+        for i in range(-1,2):
+            for j in range(-1,2):
+                # get rid of areas surrounding starting locations
+                try:
+                    allowed.append((start_row + i, start_col + j))
+                except:
+                    pass
         allowed.remove((start_row, start_col)) #cant place a mine at start click
         self.array[start_row][start_col] = Cell(0) #place cell
         self.array[start_row][start_col].setstate(1) #uncover it
