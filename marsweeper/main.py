@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 
 class App:
+
     def __init__(self):
         self._running = True
         self._display_surf = None
@@ -9,6 +10,36 @@ class App:
         self.square = 40
         self.margin = 5
         self.grid_colour = (255, 255, 255)
+
+    class tiles:
+        '''
+        This class provides squares to blit onto the main pygame surface;
+        there is an initial.
+        type is an int from 0-11 where type:
+        0-8 correspond to tiles with numbers 0-8 on them
+        9 is a flagged tiles
+        10 is a mine
+        11 is an covered tile
+        '''
+
+        zero =
+        one =
+        two =cd
+        three =
+        four =
+        five =
+        six =
+        seven =
+        eight =
+        flag =
+        mine =
+        covered =
+
+        array = [zero, one, two, three, four, five, six, seven, eight,
+                flag, mine, covered]
+        @classmethod
+        def get()
+        return array[type]
 
     def on_init(self):
         pygame.init()
