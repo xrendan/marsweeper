@@ -82,7 +82,7 @@ class Board:
         #prints the board without hiding anything
         for i in range(self.width):
             for j in range(self.height):
-                temp = self.array[j][i]
+                temp = self.array[i][j]
                 if temp.value == -1:
                     print("-1", end=" ")
                 else:
@@ -92,7 +92,7 @@ class Board:
         #prints the board as seen by the user
         for i in range(self.width):
             for j in range(self.height):
-                temp = self.array[j][i]
+                temp = self.array[i][j]
                 if temp.state == -1:
                     print(" F", end=" ")#print flags
                 elif temp.state == 1:
@@ -102,16 +102,16 @@ class Board:
             print()
     def getActiveBoard(self):
         #makes an array with the hidden info stripped
-        output = []
+        output = [[0 for x in range(self.width)] for y in range(self.height)]
         for i in range(self.width):
             for j in range(self.height):
-                temp = self.array[j][i]
+                temp = self.array[i][j]
                 if temp.state == -1:
-                    output[i][j] = Cell(9,-1) #its flagged, but you dont know whats inside
+                    output[i][j] = Cell(None,-1) #its flagged, but you dont know whats inside
                 elif temp.state == 1:
                     output[i][j] = temp
                 else:
-                    output[i][j] = Cell(9,0) #its covered
+                    output[i][j] = Cell(None,0) #its covered
         return output
     def getState(self, row, col):
         return self.array[row][col].state
@@ -142,7 +142,12 @@ class Board:
             return self.checkWinCondition()#may or may not have won?
         #this is ignored during recursive calls
     def toggleFlag(self, row, col):
-        self.array[row][col].state = -1
+        if self.array[row][col].state == -1:#flags or unflags a spot
+            self.array[row][col].state = 0
+        else:
+            self.array[row][col].state = -1
+    def setFlag(self, row, col):
+        self.array[row][col].state = -1 #the AI is alergic to toggles
     def checkWinCondition(self):
         #win by uncover?
         if len(self.mines_loc) == self.uncovered:
