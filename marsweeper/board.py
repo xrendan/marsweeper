@@ -63,7 +63,7 @@ class Board:
         for i in range(self.mines):
             targ = allowed[i]
             self.array[targ[0]][targ[1]] = Cell(-1) #place mine
-            self.mines_loc += targ #store mine locations for later
+            self.mines_loc += [targ] #store mine locations for later
 
         for loc in allowed[self.mines:]: #fill empty space with empty cells
             self.array[loc[0]][loc[1]] = Cell(0)
@@ -144,13 +144,20 @@ class Board:
     def toggleFlag(self, row, col):
         if self.array[row][col].state == -1:#flags or unflags a spot
             self.array[row][col].state = 0
+            print("if it just crashed you already know why")
+            self.flags_loc.remove((row,col))
         else:
             self.array[row][col].state = -1
+            self.flags_loc += (row,col)
     def setFlag(self, row, col):
+        if self.array[row][col].state == 1:#Its uncovered
+            print("you cant flag an uncovered cell")
         self.array[row][col].state = -1 #the AI is alergic to toggles
+        self.flags_loc += (row,col)
     def checkWinCondition(self):
         #win by uncover?
-        if len(self.mines_loc) == self.uncovered:
+        if len(self.mines_loc) == self.width*self.height-self.uncovered:
+            pass
             return 1 #you had to have won, as you would have lost
             #when you uncovered a mine
         #win by flags?
