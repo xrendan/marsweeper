@@ -124,6 +124,7 @@ class Board:
             return 0
         elif self.array[row][col].value == -1:
             #game over rip
+            self.win_condition=-1
             return -1
         else:
             self.array[row][col].state = 1
@@ -155,6 +156,9 @@ class Board:
         self.array[row][col].state = -1 #the AI is alergic to toggles
         self.flags_loc += (row,col)
     def checkWinCondition(self):
+        #Did they lose?
+        if self.win_condition ==-1:
+            return -1
         #win by uncover?
         if len(self.mines_loc) == self.width*self.height-self.uncovered:
             pass
