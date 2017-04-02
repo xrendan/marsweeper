@@ -10,9 +10,9 @@ class Cell:
         0 is covered
         1 is uncovered
     '''
-    def __init__(self, value):
+    def __init__(self, value,state = 0):
         self.value = value
-        self.state = 0
+        self.state = state
     def getvalue(self):
         return self.value
     def setstate(self,new):
@@ -100,6 +100,19 @@ class Board:
                 else:
                     print(" ?",end = " ") #covered square
             print()
+    def getActiveBoard(self):
+        #makes an array with the hidden info stripped
+        output = []
+        for i in range(self.width):
+            for j in range(self.height):
+                temp = self.array[j][i]
+                if temp.state == -1:
+                    output[i][j] = Cell(9,-1) #its flagged, but you dont know whats inside
+                elif temp.state == 1:
+                    output[i][j] = temp
+                else:
+                    output[i][j] = Cell(9,0) #its covered
+        return output
     def getState(self, row, col):
         return self.array[row][col].state
 
