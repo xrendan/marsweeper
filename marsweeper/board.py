@@ -1,4 +1,4 @@
-from random import randrange
+import random
 
 class Cell:
     '''
@@ -37,14 +37,17 @@ class Board:
     a board is created such that the first tile has no mines  surrounding the
     starting tile
     '''
-    def __init__(self, width, height, mines):
+    def __init__(self, width, height, mines, debug=False):
         self.changes = []
         self.width = width
         self.height = height
         self.mines = mines
         self.win_condition = 0
-        self.debug = False
+        self.debug = debug
         self.array = []
+        self.flags_loc = []
+        self.mines_loc = [] #for checking win condition quickly
+        self.uncovered = 0 #for avoiding scanning the array to calc win conditions
     def generate(self,start_row, start_col):
         '''Creates a minefield with a starting position'''
         self.array = [[0 for x in range(self.width)] for y in range(self.height)] #generate field
@@ -56,37 +59,34 @@ class Board:
                 if (start_row + i) >= 0 and (start_row + i) < self.width and (start_col + j) >= 0 and (start_col + j) < self.height:
                     allowed.remove((start_row + i, start_col + j))
                     self.array[start_row + i][start_col + j] = Cell(0) #place cell
-
-        self.array[start_row][start_col].setstate(1) #uncover initial cell
-        while mines_left > 0 and len(allowed):
-            to_place = randrange(0, len(allowed)) #where we will place a mine
-            targ = allowed[to_place] #get co-ords
+        random.shuffle(allowed)
+        for i in range(self.mines):
+            targ = allowed[i]
             self.array[targ[0]][targ[1]] = Cell(-1) #place mine
-            allowed.remove(targ) #this gets really slow after about 100 mines
-            mines_left -= 1 #but who wants to play that?
-        for inc in range(len(allowed)): #fill empty space with empty cells
-            targ = allowed[inc]
-            self.array[targ[0]][targ[1]] = Cell(0)
+            self.mines_loc += targ #store mine locations for later
+
+        for loc in allowed[self.mines:]: #fill empty space with empty cells
+            self.array[loc[0]][loc[1]] = Cell(0)
         for i in range(self.width): #now to fill in value of nearby mines
             for j in range(self.height):
                 cur = self.array[i][j]
-                if cur.getvalue() != -1:
+                if cur.value != -1:
                     spots = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
                     #list comp creates a list of the 8 spots around our cur position
                     #that are on the board
                     for spot in spots:
-                        if self.array[spot[0]][spot[1]].getvalue() == -1:
+                        if self.array[spot[0]][spot[1]].value == -1:
                             cur.addvalue(1)
-
+        self.checkCell(start_row,start_col)
     def cmdPrintBoard(self):
         #prints the board without hiding anything
         for i in range(self.width):
             for j in range(self.height):
                 temp = self.array[j][i]
-                if temp.getvalue() == -1:
+                if temp.value == -1:
                     print("-1", end=" ")
                 else:
-                    print(" "+ str(temp.getvalue()),end=" ")
+                    print(" "+ str(temp.value),end=" ")
             print()
     def cmdPrintActiveBoard(self):
         #prints the board as seen by the user
@@ -96,16 +96,56 @@ class Board:
                 if temp.state == -1:
                     print(" F", end=" ")#print flags
                 elif temp.state == 1:
-                    print(" "+ str(temp.getvalue()),end=" ")#print nearby mines
+                    print(" "+ str(temp.value),end=" ")#print nearby mines
                 else:
                     print(" ?",end = " ") #covered square
             print()
     def getState(self, row, col):
         return self.array[row][col].state
+
+    def checkCell(self, row, col,chkwin=1):
+        if self.array[row][col].state == -1:
+            print("Invalid: has flag")
+        elif self.array[row][col].state == 1:
+            #already been here
+            return 0
+        elif self.array[row][col].value == -1:
+            #game over rip
+            return -1
+        else:
+            self.array[row][col].state = 1
+            self.uncovered +=1
+            if self.array[row][col].value == 0:
+                #we need to try to uncover the surrounding cells
+                spots = [(x,y) for x in range(max(0,row-1),min(self.width,row+2)) for y in range(max(0,col-1),min(self.height,col+2))]
+                #list comp creates a list of the 8 spots around our cur position
+                #that are on the board
+                for spot in spots:
+                    self.checkCell(spot[0],spot[1],0) #recursivly find open spaces and uncover them
+        if self.debug:
+            self.cmdPrintActiveBoard()
+            # return self.array[row][col].value
+        if chkwin:#so we dont check on every internal checkcell
+            return self.checkWinCondition()#may or may not have won?
+        #this is ignored during recursive calls
+    def toggleFlag(self, row, col):
+        self.array[row][col].state = -1
+    def checkWinCondition(self):
+        #win by uncover?
+        if len(self.mines_loc) == self.uncovered:
+            return 1 #you had to have won, as you would have lost
+            #when you uncovered a mine
+        #win by flags?
+        if self.mines == len(self.flags_loc):
+            for pos in self.mines_loc:
+                if pos not in self.flags_loc:
+                    return 0
+            return 1 #exiting the forloop you must have won
+        return 0 #if you made it this far you didnt win
+
 if __name__ == '__main__':
-    bored = Board(5,5,4)
-    bored.generate(3,4)
+    bored = Board(10,10,25)
+    bored.generate(3,3)
     bored.cmdPrintBoard()
     print("\nActive\n")
     bored.cmdPrintActiveBoard()
-    #print(bored.getState(4,4))
