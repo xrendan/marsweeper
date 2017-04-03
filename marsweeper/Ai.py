@@ -22,8 +22,8 @@ class RNJesus:
             return 0 #we may have won or lost, but thats not our thing
         elif progress == 0:#we cant move forward with simple, we need to go deeper
             for num in range(2,9):
-                progress = self.complex(num)
-                print("did complex on "+str(num)+" with progress "+str(progress))
+                progress = self.simpleExt(num)
+                print("did simpleExt on "+str(num)+" with progress "+str(progress))
                 if progress:
                     break#chances are as we go up we get less progress
 
@@ -51,7 +51,7 @@ class RNJesus:
                             return win-2
                     self.memo += targ #we dont need to check this cell anymore
         return progress
-    def complex(self,num):
+    def simpleExt(self,num):
         #We search for a given number, and flag/uncover when they provide a deterministic answer
         #this usually leads to worse results than simple
         progress = 0
@@ -75,12 +75,16 @@ class RNJesus:
                     for spot in intel[1]:
                         self.remotesetFlag(spot[0],spot[1])
                         self.flags +=1
-                        progress +=1000
+                        progress +=1
 
 
 
         return progress
-
+    def complex(self):
+        '''this is where things get interesting. Now we have to look at
+        groups of cells.
+        '''
+        pass
     def getIntel(self,i,j):
         #finds out information about the surrounding cells
         spots = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
