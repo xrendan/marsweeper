@@ -29,7 +29,7 @@ class Tiles:
         self.size = size
         self.uncovered_colour = uncovered_colour
         self.text_colour = text_colour
-        self.base = pygame.Surface((size,size), pygame.SRCALPHA, 32).convert_alpha()
+        self.base = pygame.Surface((size,size), SRCALPHA, 32).convert_alpha()
         self.base.set_alpha(255)
 
         self.covered_base = self.base.copy()
@@ -88,16 +88,21 @@ class App:
 
         pygame.font.init()
         self.font = pygame.font.SysFont("monospace", 15)
-        self._display_surf = pygame.display.set_mode(self.size, RESIZABLE)
+        self._display_surf = pygame.display.set_mode(self.size)
 
         self._running = True
         self.tiles = Tiles(self.square)
         self.tiles.create()
 
+        pygame.event.set_allowed([MouseB])
+
 
     def first_click(self, row, col):
         self.board.generate(row, col)
         # TODO start timer
+
+    def on_click(self, row, col):
+        return self.board.checkCell(row,col)
 
     def render_grid(self):
         for row in range(self.rows):
@@ -128,6 +133,8 @@ class App:
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
+        if event.type == MOUSEBUTTONDOWN:
+            on_click()
 
     def on_loop(self):
         pass
