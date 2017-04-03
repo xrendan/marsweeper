@@ -10,9 +10,9 @@ class Cell:
         0 is covered
         1 is uncovered
     '''
-    def __init__(self, value):
+    def __init__(self, value,state = 0):
         self.value = value
-        self.state = 0
+        self.state = state
     def getvalue(self):
         return self.value
     def setstate(self,new):
@@ -63,7 +63,7 @@ class Board:
         for i in range(self.mines):
             targ = allowed[i]
             self.array[targ[0]][targ[1]] = Cell(-1) #place mine
-            self.mines_loc += targ #store mine locations for later
+            self.mines_loc += [targ] #store mine locations for later
 
         for loc in allowed[self.mines:]: #fill empty space with empty cells
             self.array[loc[0]][loc[1]] = Cell(0)
@@ -82,7 +82,7 @@ class Board:
         #prints the board without hiding anything
         for i in range(self.width):
             for j in range(self.height):
-                temp = self.array[j][i]
+                temp = self.array[i][j]
                 if temp.value == -1:
                     print("-1", end=" ")
                 else:
@@ -92,7 +92,7 @@ class Board:
         #prints the board as seen by the user
         for i in range(self.width):
             for j in range(self.height):
-                temp = self.array[j][i]
+                temp = self.array[i][j]
                 if temp.state == -1:
                     print(" F", end=" ")#print flags
                 elif temp.state == 1:
@@ -100,6 +100,19 @@ class Board:
                 else:
                     print(" ?",end = " ") #covered square
             print()
+    def getActiveBoard(self):
+        #makes an array with the hidden info stripped
+        output = [[0 for x in range(self.width)] for y in range(self.height)]
+        for i in range(self.width):
+            for j in range(self.height):
+                temp = self.array[i][j]
+                if temp.state == -1:
+                    output[i][j] = Cell(None,-1) #its flagged, but you dont know whats inside
+                elif temp.state == 1:
+                    output[i][j] = temp
+                else:
+                    output[i][j] = Cell(None,0) #its covered
+        return output
     def getState(self, row, col):
         return self.array[row][col].state
 
@@ -111,6 +124,7 @@ class Board:
             return 0
         elif self.array[row][col].value == -1:
             #game over rip
+            self.win_condition=-1
             return -1
         else:
             self.array[row][col].state = 1
@@ -129,10 +143,25 @@ class Board:
             return self.checkWinCondition()#may or may not have won?
         #this is ignored during recursive calls
     def toggleFlag(self, row, col):
-        self.array[row][col].state = -1
+        if self.array[row][col].state == -1:#flags or unflags a spot
+            self.array[row][col].state = 0
+            print("if it just crashed you already know why")
+            self.flags_loc.remove((row,col))
+        else:
+            self.array[row][col].state = -1
+            self.flags_loc += (row,col)
+    def setFlag(self, row, col):
+        if self.array[row][col].state == 1:#Its uncovered
+            print("you cant flag an uncovered cell")
+        self.array[row][col].state = -1 #the AI is alergic to toggles
+        self.flags_loc += (row,col)
     def checkWinCondition(self):
+        #Did they lose?
+        if self.win_condition ==-1:
+            return -1
         #win by uncover?
-        if len(self.mines_loc) == self.uncovered:
+        if len(self.mines_loc) == self.width*self.height-self.uncovered:
+            pass
             return 1 #you had to have won, as you would have lost
             #when you uncovered a mine
         #win by flags?
