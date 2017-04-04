@@ -1,4 +1,3 @@
-from board import Board
 class RNJesus:
     def __init__(self,width, height, mines,checkCell,setFlag):
         #needs reinit when playing a new map
@@ -84,7 +83,23 @@ class RNJesus:
         '''this is where things get interesting. Now we have to look at
         groups of cells.
         '''
-        pass
+        progress = 0
+        possible = []
+        for x in range(self.width):
+            for y in range(self.height):
+                if self.grid[x][y].value == num and (x,y) not in self.memo: #squares in memo are nonattached
+                    possible += [(x,y)] #this will be every known cell around an unknown cell
+        covlist = [] #this list will have a list of all covered tiles we know about
+        for targ in possible:#cube time is fine
+            intel = getIntel(targ[0],targ[1])
+            for spot in intel[1]:
+                if spot not in edgelist:
+                    covlist += spot
+        edgelists = [] #this list will contain lists of disjoint covered squares
+
+
+
+
     def getIntel(self,i,j):
         #finds out information about the surrounding cells
         spots = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
@@ -100,6 +115,7 @@ class RNJesus:
         return [flags,covered]
 
 if __name__ == "__main__":
+    from board import Board
     bored = Board(10,10,5)
     dumb = RNJesus(10,10,5,bored.checkCell,bored.setFlag)#cancer
     bored.generate(3,3)
