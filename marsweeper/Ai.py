@@ -25,6 +25,8 @@ class RNJesus:
                 print("did simpleExt on "+str(num)+" with progress "+str(progress))
                 if progress:
                     break#chances are as we go up we get less progress
+            print("Doing complex")
+            self.complex()#this is where things get bad
 
     def simple(self):
         #We search for ones, and flag/uncover when they provide a deterministic answer
@@ -87,18 +89,65 @@ class RNJesus:
         possible = []
         for x in range(self.width):
             for y in range(self.height):
-                if self.grid[x][y].value == num and (x,y) not in self.memo: #squares in memo are nonattached
+                if self.grid[x][y].value != None and self.grid[x][y].value > 0 and (x,y) not in self.memo: #squares in memo are nonattached
                     possible += [(x,y)] #this will be every known cell around an unknown cell
         covlist = [] #this list will have a list of all covered tiles we know about
         for targ in possible:#cube time is fine
-            intel = getIntel(targ[0],targ[1])
+            intel = self.getIntel(targ[0],targ[1])
             for spot in intel[1]:
-                if spot not in edgelist:
-                    covlist += spot
-        edgelists = [] #this list will contain lists of disjoint covered squares
+                if spot not in covlist:
+                    covlist += [spot]
+        edgelists = self.getAMD(covlist,possible)
+        print("WE GOT OUT BOYS")
+        print(edgelists)
+        exit()
 
 
 
+    def getAMD(self,covlist,possible):#checks to see if a cell is attached to another cell body
+        #uses breadth first search
+
+        edgelists = []
+        cur_edgelist = []
+        cur_possiblelist = []#we will need to check each element later as we brute force
+        visited = [] #We will never stop without this
+        #que = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
+        que = [covlist[1]]
+        target = 0 #for iterating through the que without having to do more awful list things
+        while target <= len(que):
+            if target == len(que):# we went off the end, time to see if we are done
+                for victim in covlist:
+                    if victim not in cur_edgelist:
+                        que += [victim]
+                        edgelists += ([cur_edgelist,cur_possiblelist]) #list of lists in a list
+                        cur_possiblelist = []
+                        cur_edgelist = []
+                        continue #we short cut back around to start searching from this node
+                #so all victims in covlist have been scanned and added
+                edgelists += [cur_edgelist,cur_possiblelist] #list of lists in a list
+                return edgelists #we finished with this
+            if que[target] in visited:
+                #that was a waste of time
+                pass
+            elif que[target] in covlist:
+                #now we know its attached to this section.
+                cur_edgelist += [que[target]]
+                #we can scan its neighbors
+                tmp = [(x,y) for x in range(max(0,que[target][0]-1),min(self.width,que[target][0]+2))
+                for y in range(max(0,que[target][1]-1),min(self.height,que[target][1]+2))]#list comp is getting out of hand
+                tmp.remove(que[target])# its not as slow when theres only 9 elements.
+                que += tmp
+                visited += [que[target]]
+            elif que[target] in possible:
+                #this cell will need to be checked later when trying solutions
+                cur_possiblelist += [que[target]]
+                #but we need to scan its neighbors, it may be a bridge
+                tmp = [(x,y) for x in range(max(0,que[target][0]-1),min(self.width,que[target][0]+2))
+                for y in range(max(0,que[target][1]-1),min(self.height,que[target][1]+2))]#list comp is getting out of hand
+                tmp.remove(que[target])
+                que += tmp
+                visited += [que[target]]
+            target += 1
 
     def getIntel(self,i,j):
         #finds out information about the surrounding cells
@@ -116,8 +165,8 @@ class RNJesus:
 
 if __name__ == "__main__":
     from board import Board
-    bored = Board(10,10,5)
-    dumb = RNJesus(10,10,5,bored.checkCell,bored.setFlag)#cancer
+    bored = Board(10,10,20)
+    dumb = RNJesus(10,10,20,bored.checkCell,bored.setFlag)#cancer
     bored.generate(3,3)
     bored.cmdPrintBoard()
     print("\nActive\n")
