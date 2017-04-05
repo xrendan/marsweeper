@@ -123,8 +123,9 @@ class RNJesus:
             temp += [self.grid[posi[0]][posi[1]].value-self.getIntel(posi[0],posi[1])[0]]
             mtx_gen +=[temp]
         mtrx = Matrix(mtx_gen)
-        mtrx = mtrx.rref()
+        mtrx = mtrx.rref() #sympy exists for this line. I wasnt coding this
         mtrx = mtrx[0]#Python why? This gets put in a tuple for no reason
+        randi = [] #stores some information used for guessing if this fails
         for linenum in range(height):
             upper = 0 #max value of an eq
             lower = 0 #lowest value of eq
@@ -133,7 +134,7 @@ class RNJesus:
                     upper+=1
                 elif mtrx[linenum,covpos] == 0:
                     lower += 1
-
+            randi += [upper,lower,mtrx[linenum,width]]#third is kinda a placeholder for later
             if upper == mtrx[linenum,width]:
                 #we know that any positive is a mine, and negative is not
                 for covpos in range(width):
@@ -162,7 +163,11 @@ class RNJesus:
                         if win:
                             return win-3
                         progress+=1
-        return progress
+        print(mtrx)
+        if progress:#If we made a move we stop
+            return progress
+        #Otherwise we go straight into the random alg so we can reuse variables.
+
     def tileInRange(self,posi,tile):
         x = posi[0] - tile[0]
         y = posi[1] - tile[1]
@@ -243,8 +248,8 @@ class RNJesus:
 
 if __name__ == "__main__":
     from board import Board
-    bored = Board(10,10,25)
-    dumb = RNJesus(10,10,25,bored.checkCell,bored.setFlag)#cancer
+    bored = Board(10,10,20)
+    dumb = RNJesus(10,10,20,bored.checkCell,bored.setFlag)#cancer
     bored.generate(3,3)
     bored.cmdPrintBoard()
     print("\nActive\n")
