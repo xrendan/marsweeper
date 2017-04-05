@@ -76,6 +76,7 @@ class App:
         self.rows = 8
         self.cols = 8
         self.mines = 10
+        self.changes = False
 
     def board_init(self):
         self.board = board.Board(self.rows, self.cols, self.mines)
@@ -104,6 +105,7 @@ class App:
     def on_click(self, row, col):
 #         print(row, col)
         self.board.checkCell(row,col)
+        self.changes = True
 #         self.board.cmdPrintActiveBoard()
 
     def render_grid(self):
@@ -149,7 +151,9 @@ class App:
 
 
     def on_render(self):
-        self.render_grid()
+        if self.changes == True:
+            self.render_grid()
+            self.changes = False
         pass
 
     def on_cleanup(self):
