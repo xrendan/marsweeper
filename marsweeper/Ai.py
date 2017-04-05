@@ -1,4 +1,5 @@
 from sympy import *
+#rom math import min
 class RNJesus:
     def __init__(self,width, height, mines,checkCell,setFlag):
         #needs reinit when playing a new map
@@ -134,7 +135,7 @@ class RNJesus:
                     upper+=1
                 elif mtrx[linenum,covpos] == 0:
                     lower += 1
-            randi += [upper,lower,mtrx[linenum,width]]#third is kinda a placeholder for later
+            randi += [(upper+mtrx[linenum,width],lower+mtrx[linenum,width])]
             if upper == mtrx[linenum,width]:
                 #we know that any positive is a mine, and negative is not
                 for covpos in range(width):
@@ -147,7 +148,7 @@ class RNJesus:
                         loc = covlist[covpos]
                         win = self.remotecheckCell(loc[0],loc[1])
                         if win:
-                            return win-3
+                            return win-2
                         progress+=1
             elif lower == mtrx[linenum,width]:
                 #we know that any negative is a mine, and positive is not
@@ -161,12 +162,25 @@ class RNJesus:
                         loc = covlist[covpos]
                         win = self.remotecheckCell(loc[0],loc[1])
                         if win:
-                            return win-3
+                            return win-2
                         progress+=1
-        print(mtrx)
         if progress:#If we made a move we stop
             return progress
         #Otherwise we go straight into the random alg so we can reuse variables.
+
+        output = []
+        print(randi)
+        for line in range(len(randi)):
+            (left,right) = randi[line]
+            output += min([left/(left+right),right/(left+right)])
+        print(output)
+        minimum = min(output)
+        loc = covlist[0]
+
+        win = self.remotecheckCell(loc[0],loc[1])
+        if win:
+            return win-40
+        return 0
 
     def tileInRange(self,posi,tile):
         x = posi[0] - tile[0]
