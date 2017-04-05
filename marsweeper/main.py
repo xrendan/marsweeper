@@ -68,8 +68,8 @@ class App:
         self._running = True
         self._display_surf = None
         self.size = self.weight, self.height = 640, 400
-        self.square = 200
-        self.margin = 10
+        self.square = 50
+        self.margin = 5
         self.grid_colour = (255, 255, 255)
         self.board = None
         self.tiles = None
@@ -101,8 +101,7 @@ class App:
         self.board.generate(row, col)
         # TODO start timer
 
-    def on_click(self, x, y):
-        row, col = self.pix_to_grid(x,y)
+    def on_click(self, row, col):
 #         print(row, col)
         self.board.checkCell(row,col)
 #         self.board.cmdPrintActiveBoard()
@@ -138,10 +137,11 @@ class App:
             self._running = False
         if event.type == MOUSEBUTTONDOWN:
             x, y = event.pos
-            if x == -1 or y == -1:
+            row, col = self.pix_to_grid(x,y)
+            if row == -1 or col == -1:
                 pass
             else:
-                self.on_click(x, y)
+                self.on_click(row, col)
 
     def on_loop(self):
         #TODO check win condition
