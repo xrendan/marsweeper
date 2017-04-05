@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+from math import floor
 import board
 
 class Tiles:
@@ -22,9 +23,10 @@ class Tiles:
                  texpack=None):
 
         self.font = font
+        self.size = size
         if font == None:
             pygame.font.init()
-            self.font = pygame.font.SysFont("monospace", 30, bold=True)
+            self.font = pygame.font.SysFont("monospace", int(self.size*0.75), bold=True)
         self.covered_colour = covered_colour
         self.size = size
         self.uncovered_colour = uncovered_colour
@@ -57,9 +59,6 @@ class Tiles:
 
         self.array[11] = self.covered_base.copy()
 
-
-        for i in range(12):
-            print(type(self.array[i]))
     def get(self, type):
         return self.array[type]
 
@@ -69,16 +68,17 @@ class App:
         self._running = True
         self._display_surf = None
         self.size = self.weight, self.height = 640, 400
-        self.square = 40
-        self.margin = 5
+        self.square = 200
+        self.margin = 10
         self.grid_colour = (255, 255, 255)
         self.board = None
         self.tiles = None
-        self.rows = 5
-        self.cols = 5
+        self.rows = 8
+        self.cols = 8
+        self.mines = 10
 
-    def board_init(self, width, height, mines):
-        self.board = board.Board(width, height, mines)
+    def board_init(self):
+        self.board = board.Board(self.rows, self.cols, self.mines)
 
 
     def on_init(self):
@@ -94,15 +94,18 @@ class App:
         self.tiles = Tiles(self.square)
         self.tiles.create()
 
-        pygame.event.set_allowed([MouseB])
+        pygame.event.set_allowed([MOUSEBUTTONDOWN])
 
 
     def first_click(self, row, col):
         self.board.generate(row, col)
         # TODO start timer
 
-    def on_click(self, row, col):
-        return self.board.checkCell(row,col)
+    def on_click(self, x, y):
+        row, col = self.pix_to_grid(x,y)
+#         print(row, col)
+        self.board.checkCell(row,col)
+#         self.board.cmdPrintActiveBoard()
 
     def render_grid(self):
         for row in range(self.rows):
@@ -134,26 +137,48 @@ class App:
         if event.type == pygame.QUIT:
             self._running = False
         if event.type == MOUSEBUTTONDOWN:
-            on_click()
+            x, y = event.pos
+            if x == -1 or y == -1:
+                pass
+            else:
+                self.on_click(x, y)
 
     def on_loop(self):
+        #TODO check win condition
         pass
 
 
     def on_render(self):
+        self.render_grid()
         pass
 
     def on_cleanup(self):
         pygame.quit()
 
+    def pix_to_grid(self, x, y):
+        width = (self.square + self.margin)
+
+        temp = x % width
+        if temp <= self.margin:
+            row = -1
+        else:
+            row = floor(x/width)
+        temp = y % width
+        if temp <= self.margin:
+            col = -1
+        else:
+            col = floor(y/width)
+        return row, col
 
     def on_execute(self):
         if self.on_init() == False:
             self._running == False
-        self.render_grid()
         pygame.display.set_caption("MARSWEEPER")
-        self.size = self.size = self.weight, self.height = 1000, 1200
+        self.weight = self.margin *(self.rows + 1) + self.square*self.rows + 200
+        self.height = self.margin *(self.cols + 1) + self.square*self.cols
+        self.size = self.weight, self.height
         self._display_surf = pygame.display.set_mode(self.size)
+        self.render_grid()
         while (self._running):
             for event in pygame.event.get():
                 self.on_event(event)
@@ -170,4 +195,6 @@ class App:
 if __name__ == "__main__":
     theApp = App()
     theApp.on_init()
+    theApp.board_init()
+    theApp.board.generate(0,0)
     theApp.on_execute()
