@@ -124,6 +124,7 @@ class Board:
             return 0
         elif self.array[row][col].value == -1:
             #game over rip
+            self.array[row][col].state = 1
             self.win_condition=-1
             return -1
         else:
@@ -147,7 +148,7 @@ class Board:
             self.array[row][col].state = 0
             print("if it just crashed you already know why")
             self.flags_loc.remove((row,col))
-        else:
+        elif self.array[row][col].state == 0:
             self.array[row][col].state = -1
             self.flags_loc.append((row,col))
     def setFlag(self, row, col):
