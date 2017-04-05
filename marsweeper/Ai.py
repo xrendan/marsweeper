@@ -7,16 +7,31 @@ class RNJesus:
         self.height = height
         self.mines = mines
         self.flags = 0
+        self.numcov = None
         self.grid = []
         self.memo = []
         self.remotecheckCell = checkCell #this is toxic, but leaves us
         self.remotesetFlag = setFlag #no room for cheating
+    def getcovered(self):
+        count =0
+        for x in range(self.width):
+            for y in range(self.height):
+                if self.grid[x][y].state == 0:
+                    count +=1
+        return count
     def attack(self,grid):
         '''Causes the AI to go through one 'attack' sequence
         attempting to mark mines and uncover squares. It may make more than
         one move per 'attack' but it wont solve a whole (nontrivial) board.
         This gives time to render and do other stuff'''
         self.grid = grid #so we dont have to pass it around everywhere
+        self.numcov = self.getcovered()
+        if self.numcov == self.mines-self.flags:#EVERYTHINGS A MINE!
+            for x in range(self.width):
+                for y in range(self.height):
+                    if self.grid[x][y].state == 0:
+                        self.remotesetFlag(x,y)
+                        self.flags +=1
         progress = self.simple()
         print("did simple with progress "+str(progress))
         if progress == -1:
@@ -126,16 +141,19 @@ class RNJesus:
         mtrx = Matrix(mtx_gen)
         mtrx = mtrx.rref() #sympy exists for this line. I wasnt coding this
         mtrx = mtrx[0]#Python why? This gets put in a tuple for no reason
-        randi = [] #stores some information used for guessing if this fails
+        maxnum = 0
+        maxloc = None
         for linenum in range(height):
             upper = 0 #max value of an eq
             lower = 0 #lowest value of eq
             for covpos in range(width):
                 if mtrx[linenum,covpos] == 1:
                     upper+=1
-                elif mtrx[linenum,covpos] == 0:
+                elif mtrx[linenum,covpos] == -1:
                     lower += 1
-            randi += [(upper+mtrx[linenum,width],lower+mtrx[linenum,width])]
+            if lower==0 and upper-mtrx[linenum,width]>maxnum:
+                maxloc = linenum
+                maxnum = upper-mtrx[linenum,width]
             if upper == mtrx[linenum,width]:
                 #we know that any positive is a mine, and negative is not
                 for covpos in range(width):
@@ -150,7 +168,7 @@ class RNJesus:
                         if win:
                             return win-2
                         progress+=1
-            elif lower == mtrx[linenum,width]:
+            elif -lower == mtrx[linenum,width]:
                 #we know that any negative is a mine, and positive is not
                 for covpos in range(width):
                     if mtrx[linenum,covpos] == -1:
@@ -168,17 +186,20 @@ class RNJesus:
             return progress
         #Otherwise we go straight into the random alg so we can reuse variables.
 
-        output = []
-        print(randi)
-        for line in range(len(randi)):
-            (left,right) = randi[line]
-            output += min([left/(left+right),right/(left+right)])
-        print(output)
-        minimum = min(output)
-        loc = covlist[0]
+        if maxloc:
+            for covpos in range(width):
+                if mtrx[maxloc,covpos]==1:
+                    loc = covlist[covpos]
+                    print(mtrx[maxloc,0:width+1])
+                    break
+        else:
+            loc = covlist[0]
+            print("GIBB")
 
         win = self.remotecheckCell(loc[0],loc[1])
         if win:
+            print()
+            print(mtrx)
             return win-40
         return 0
 
@@ -268,7 +289,7 @@ if __name__ == "__main__":
     bored.cmdPrintBoard()
     print("\nActive\n")
     bored.cmdPrintActiveBoard()
-    while input():
+    while 1:
         dumb.attack(bored.getActiveBoard())
         print("\n")
         bored.cmdPrintActiveBoard()
