@@ -68,7 +68,7 @@ class App:
         self._running = True
         self._display_surf = None
         self.size = self.weight, self.height = 640, 400
-        self.square = 50
+        self.square = 200
         self.margin = 5
         self.grid_colour = (255, 255, 255)
         self.board = None
@@ -77,9 +77,12 @@ class App:
         self.cols = 8
         self.mines = 10
         self.changes = False
+        self.window = 0
 
     def board_init(self):
         self.board = board.Board(self.rows, self.cols, self.mines)
+        self.render_grid()
+
 
 
     def on_init(self):
@@ -102,11 +105,15 @@ class App:
         self.board.generate(row, col)
         # TODO start timer
 
-    def on_click(self, row, col):
+    def check_cell(self, row, col):
 #         print(row, col)
         self.board.checkCell(row,col)
         self.changes = True
 #         self.board.cmdPrintActiveBoard()
+
+    def toggle_flag(self, row, col):
+        self.board.toggleFlag(row,col)
+        self.changes = True
 
     def render_grid(self):
         for row in range(self.rows):
@@ -116,20 +123,23 @@ class App:
         pygame.display.update()
 
     def render_cell(self, row, col):
-        state = self.board.array[row][col].state
-        # tile is covered
-        if state == 0:
-            tile = self.tiles.get(11)
-        # tile is a flag
-        elif state == -1:
-            tile = self.tiles.get(9)
-        else:
-            temp = self.board.array[row][col].value
-            # tile is a mine
-            if temp == -1:
-                tile = self.tiles.get(10)
+        try:
+            state = self.board.array[row][col].state
+            # tile is covered
+            if state == 0:
+                tile = self.tiles.get(11)
+            # tile is a flag
+            elif state == -1:
+                tile = self.tiles.get(9)
             else:
-                tile = self.tiles.get(temp)
+                temp = self.board.array[row][col].value
+                # tile is a mine
+                if temp == -1:
+                    tile = self.tiles.get(10)
+                else:
+                    tile = self.tiles.get(temp)
+        except:
+            tile = self.tiles.get(11)
 
         location = (self.margin *(row + 1) + self.square*row, self.margin *(col + 1) + self.square*col)
         self._display_surf.blit(tile, location)
@@ -142,11 +152,19 @@ class App:
             row, col = self.pix_to_grid(x,y)
             if row == -1 or col == -1:
                 pass
-            else:
-                self.on_click(row, col)
+            elif row > self.rows or col > self.cols:
+                pass
+            elif event.button == 1:
+                self.check_cell(row, col)
+            elif event.button == 3:
+                self.toggle_flag(row,col)
 
     def on_loop(self):
-        #TODO check win condition
+        if self.board.checkWinCondition():
+            self.render_grid()
+            print(self.board.checkWinCondition())
+            input()
+            self._running = False
         pass
 
 
@@ -174,20 +192,59 @@ class App:
             col = floor(y/width)
         return row, col
 
+    def get_first_location(self):
+        not_done = True
+        while not_done:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self._running = False
+                if event.type == MOUSEBUTTONDOWN:
+                    x, y = event.pos
+                    row, col = self.pix_to_grid(x,y)
+                    if row == -1 or col == -1:
+                        pass
+                    elif row > self.rows or col > self.cols:
+                        pass
+                    else:
+                        self.board.generate(row,col)
+                        not_done = False
     def on_execute(self):
         if self.on_init() == False:
             self._running == False
         pygame.display.set_caption("MARSWEEPER")
-        self.weight = self.margin *(self.rows + 1) + self.square*self.rows + 200
+        self.weight = self.margin *(self.rows + 1) + self.square*self.rows
         self.height = self.margin *(self.cols + 1) + self.square*self.cols
         self.size = self.weight, self.height
         self._display_surf = pygame.display.set_mode(self.size)
+        self.board_init()
+        self.render_grid()
+        self.get_first_location()
         self.render_grid()
         while (self._running):
-            for event in pygame.event.get():
-                self.on_event(event)
-            self.on_loop()
-            self.on_render()
+            # main menu
+            if self.window == 0:
+                self.window = 2
+
+            #settings menu
+            if self.window == 1:
+                pass
+
+            # game play
+            elif self.window == 2:
+
+                for event in pygame.event.get():
+                    self.on_event(event)
+                self.on_loop()
+                self.on_render()
+
+            # loss screen
+            elif self.window == 3:
+                pass
+
+            # win screen
+            elif self.window == 4:
+                pass
+
         self.on_cleanup()
 
     def one_loop(self):
