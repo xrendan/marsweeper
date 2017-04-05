@@ -149,7 +149,7 @@ class Board:
             self.flags_loc.remove((row,col))
         else:
             self.array[row][col].state = -1
-            self.flags_loc += (row,col)
+            self.flags_loc.append((row,col))
     def setFlag(self, row, col):
         if self.array[row][col].state == 1:#Its uncovered
             print("you cant flag an uncovered cell")
