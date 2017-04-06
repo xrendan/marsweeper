@@ -260,6 +260,32 @@ class RNJesus:
                 covered += [spot]
         return [flags,covered]
 
+    def probability(self, x,y,z):
+        num_items = x + y
+        new_x = x - z
+        new_y = y + z
+        x_prob = new_y/num_items
+
+        y_prob = new_x/num_items
+        return x_prob, y_prob
+
+    def MagicalPickerOFprobableProbabilities(arr):
+        masterfulpickersProb = 0
+        masterfulpickersNumber = 0
+        masterfulpickersSign = 0
+        for idx, unworthyitem in enumerate(arr):
+            x,y,z = unworthyitem
+            unworthy_x_prob, unworthy_y_prob = probability(x,y,z)
+            if unworthy_x_prob > masterfulpickersProb:
+                masterfulpickersProb = unworthy_x_prob
+                masterfulpickersNumber = idx
+                masterfulpickersSign = 1
+            if unworthy_y_prob > masterfulpickersProb:
+                masterfulpickersProb = unworthy_y_prob
+                masterfulpickersNumber = idx
+                masterfulpickersSign = -1
+        return masterfulpickersNumber, masterfulpickersSign
+
 if __name__ == "__main__":
     from board import Board
     bored = Board(10,10,20)
