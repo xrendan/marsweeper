@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from math import floor
 import board
+import os
 
 class Buttons:
     def __init__(self,
@@ -96,7 +97,7 @@ class App:
     def __init__(self):
         self._running = True
         self._display_surf = None
-        self.size = self.weight, self.height = 640, 400
+        self.size = self.weight, self.height = 1536, 768
         self.square = 100
         self.margin = 5
         self.grid_colour = (255, 255, 255)
@@ -110,6 +111,8 @@ class App:
         self.initial_time = 0
         self.current_time = 0
         self.clock = None
+        self.menu_background_path = os.path.join("images", "menu_background_big.jpg")
+        self.menu_background = None
 
     def board_init(self):
         self.board = board.Board(self.rows, self.cols, self.mines)
@@ -121,7 +124,10 @@ class App:
         pygame.init()
 
         self._display_surf = pygame.display.set_mode(self.size)
-
+        self.menu_background = pygame.image.load(self.menu_background_path).convert()
+        self._display_surf.blit(self.menu_background, (0,0))
+        pygame.display.update()
+        input()
         pygame.font.init()
         self.font = pygame.font.SysFont("monospace", 15)
         self._display_surf = pygame.display.set_mode(self.size)
