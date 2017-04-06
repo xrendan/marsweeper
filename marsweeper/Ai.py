@@ -1,5 +1,5 @@
 from sympy import *
-#rom math import min
+import math
 class RNJesus:
     def __init__(self,width, height, mines,checkCell,setFlag):
         #needs reinit when playing a new map
@@ -19,6 +19,13 @@ class RNJesus:
                 if self.grid[x][y].state == 0:
                     count +=1
         return count
+    def getflags(self):
+        count =0
+        for x in range(self.width):
+            for y in range(self.height):
+                if self.grid[x][y].state == -1:
+                    count +=1
+        return count
     def attack(self,grid):
         '''Causes the AI to go through one 'attack' sequence
         attempting to mark mines and uncover squares. It may make more than
@@ -26,6 +33,7 @@ class RNJesus:
         This gives time to render and do other stuff'''
         self.grid = grid #so we dont have to pass it around everywhere
         self.numcov = self.getcovered()
+        self.flags = self.getflags()
         if self.numcov == self.mines-self.flags:#EVERYTHINGS A MINE!
             for x in range(self.width):
                 for y in range(self.height):
@@ -104,7 +112,7 @@ class RNJesus:
 
 
         return progress
-    def complex(self):
+    def complex(self,alltiles=0):
         '''this is where things get interesting. Now we have to look at
         groups of cells.
         '''
@@ -115,11 +123,17 @@ class RNJesus:
                 if self.grid[x][y].value != None and self.grid[x][y].value > 0 and (x,y) not in self.memo: #squares in memo are nonattached
                     possible += [(x,y)] #this will be every known cell around an unknown cell
         covlist = [] #this list will have a list of all covered tiles we know about
-        for targ in possible:#cube time is fine
-            intel = self.getIntel(targ[0],targ[1])
-            for spot in intel[1]:
-                if spot not in covlist:
-                    covlist += [spot]
+        if alltiles:
+            for x in range(self.width):
+                for y in range(self.height):
+                    if self.grid[x][y].state == 0:
+                        covlist += [(x,y)]
+        else:
+            for targ in possible:#cube time is fine
+                intel = self.getIntel(targ[0],targ[1])
+                for spot in intel[1]:
+                    if spot not in covlist:
+                        covlist += [spot]
         '''This doesnt seem to work, lets do something else
         edgelists = self.getAMD(covlist,possible)
         remaining_mines = self.mines - self.flags
@@ -138,11 +152,12 @@ class RNJesus:
                     temp+=[0]
             temp += [self.grid[posi[0]][posi[1]].value-self.getIntel(posi[0],posi[1])[0]]
             mtx_gen +=[temp]
+        if alltiles:
+            mtx_gen += [[1]*(width) + [self.mines-self.flags]]
         mtrx = Matrix(mtx_gen)
         mtrx = mtrx.rref() #sympy exists for this line. I wasnt coding this
         mtrx = mtrx[0]#Python why? This gets put in a tuple for no reason
-        maxnum = 0
-        maxloc = None
+        randi = []
         for linenum in range(height):
             upper = 0 #max value of an eq
             lower = 0 #lowest value of eq
@@ -151,9 +166,7 @@ class RNJesus:
                     upper+=1
                 elif mtrx[linenum,covpos] == -1:
                     lower += 1
-            if lower==0 and upper-mtrx[linenum,width]>maxnum:
-                maxloc = linenum
-                maxnum = upper-mtrx[linenum,width]
+            randi += [(upper,lower,mtrx[linenum,width])]
             if upper == mtrx[linenum,width]:
                 #we know that any positive is a mine, and negative is not
                 for covpos in range(width):
@@ -185,24 +198,53 @@ class RNJesus:
         if progress:#If we made a move we stop
             return progress
         #Otherwise we go straight into the random alg so we can reuse variables.
-
-        if maxloc:
-            for covpos in range(width):
-                if mtrx[maxloc,covpos]==1:
-                    loc = covlist[covpos]
-                    print(mtrx[maxloc,0:width+1])
-                    break
+        #print(self.mines-self.flags)
+        if self.mines-self.flags < 5 and not alltiles:
+            print("+",end="")
+            return self.complex(1)
         else:
+
             loc = covlist[0]
-            print("GIBB")
+            (ypos,sign) = self.MagicalPickerOFprobableProbabilities(randi)
+            for x in range(0,width):
+                if mtrx[ypos,x] == sign:
+                    loc = covlist[x]
+                    break
 
-        win = self.remotecheckCell(loc[0],loc[1])
-        if win:
-            print()
-            print(mtrx)
-            return win-40
+
+            win = self.remotecheckCell(loc[0],loc[1])
+            if win:
+                #print()
+                #print(mtrx)
+                return win-40
         return 0
+    def probability(self, x,y,z):
+        num_items = x + y
+        new_x = x - z
+        new_y = y + z
+        x_prob = new_y/num_items
 
+        y_prob = new_x/num_items
+        return x_prob, y_prob
+
+    def MagicalPickerOFprobableProbabilities(self,arr):
+        masterfulpickersProb = 0
+        masterfulpickersNumber = 0
+        masterfulpickersSign = 0
+        for idx, unworthyitem in enumerate(arr):
+            x,y,z = unworthyitem
+            unworthy_x_prob, unworthy_y_prob = self.probability(x,y,z)
+            if math.isnan(unworthy_x_prob):
+                break
+            if unworthy_x_prob > masterfulpickersProb:
+                masterfulpickersProb = unworthy_x_prob
+                masterfulpickersNumber = idx
+                masterfulpickersSign = 1
+            if unworthy_y_prob > masterfulpickersProb:
+                masterfulpickersProb = unworthy_y_prob
+                masterfulpickersNumber = idx
+                masterfulpickersSign = -1
+        return masterfulpickersNumber, masterfulpickersSign
     def tileInRange(self,posi,tile):
         x = posi[0] - tile[0]
         y = posi[1] - tile[1]
