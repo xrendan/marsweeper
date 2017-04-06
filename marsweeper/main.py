@@ -3,6 +3,35 @@ from pygame.locals import *
 from math import floor
 import board
 
+class Buttons:
+    def __init__(self,
+                 size,
+                 colour=(255,255,255),
+                 text_colour=(0,38,255),
+                 transparency=255,
+                 font = None,
+                 texpack=None):
+        self.font = font
+        self.size = size
+        if font == None:
+            pygame.font.init()
+            self.font = pygame.font.SysFont("monospace", int(self.size*0.75), bold=True)
+        self.covered_colour = covered_colour
+        self.size = size
+        self.colour = colour
+        self.text_colour = text_colour
+        self.base = pygame.Surface((size,size*3), SRCALPHA, 32).convert_alpha()
+        self.base.set_alpha(transparency)
+
+        self.covered_base = self.base.copy()
+        self.covered_base.fill(self.covered_colour)
+
+        self.uncovered_base = self.base.copy()
+        self.uncovered_base.fill(uncovered_colour)
+        self.array = []
+        for i in range(12):
+            self.array.append(self.uncovered_base.copy())
+
 class Tiles:
     '''
     This class provides squares to blit onto the main pygame surface;
@@ -18,7 +47,7 @@ class Tiles:
                  covered_colour=(255,255,255),
                  uncovered_colour=(125,125,125),
                  text_colour=(0,38,255),
-                 transparency=10,
+                 transparency=255,
                  font = None,
                  texpack=None):
 
@@ -32,7 +61,7 @@ class Tiles:
         self.uncovered_colour = uncovered_colour
         self.text_colour = text_colour
         self.base = pygame.Surface((size,size), SRCALPHA, 32).convert_alpha()
-        self.base.set_alpha(255)
+        self.base.set_alpha(transparency)
 
         self.covered_base = self.base.copy()
         self.covered_base.fill(self.covered_colour)
@@ -68,16 +97,19 @@ class App:
         self._running = True
         self._display_surf = None
         self.size = self.weight, self.height = 640, 400
-        self.square = 200
+        self.square = 100
         self.margin = 5
         self.grid_colour = (255, 255, 255)
         self.board = None
         self.tiles = None
         self.rows = 8
         self.cols = 8
-        self.mines = 10
+        self.mines = 5
         self.changes = False
         self.window = 0
+        self.initial_time = 0
+        self.current_time = 0
+        self.clock = None
 
     def board_init(self):
         self.board = board.Board(self.rows, self.cols, self.mines)
@@ -98,12 +130,14 @@ class App:
         self.tiles = Tiles(self.square)
         self.tiles.create()
 
+        self.clock = pygame.time.Clock()
+
         pygame.event.set_allowed([MOUSEBUTTONDOWN])
 
 
     def first_click(self, row, col):
         self.board.generate(row, col)
-        # TODO start timer
+        self.initial_time = pygame.time.get_ticks()
 
     def check_cell(self, row, col):
 #         print(row, col)
@@ -144,7 +178,7 @@ class App:
         location = (self.margin *(row + 1) + self.square*row, self.margin *(col + 1) + self.square*col)
         self._display_surf.blit(tile, location)
 
-    def on_event(self, event):
+    def game_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
         if event.type == MOUSEBUTTONDOWN:
@@ -159,16 +193,22 @@ class App:
             elif event.button == 3:
                 self.toggle_flag(row,col)
 
-    def on_loop(self):
+    def game_loop(self):
         if self.board.checkWinCondition():
             self.render_grid()
             print(self.board.checkWinCondition())
             input()
             self._running = False
-        pass
+        self.current_time = floor((pygame.time.get_ticks() - self.initial_time) / 1000)
+        label = "MARSWEEPER - TIME: {}:{} - FLAGS LEFT: {}".format(
+                    self.current_time//60,
+                    self.current_time%60,
+                    self.mines - len(self.board.flags_loc))
+        pygame.display.set_caption(label)
 
 
-    def on_render(self):
+
+    def game_render(self):
         if self.changes == True:
             self.render_grid()
             self.changes = False
@@ -220,6 +260,7 @@ class App:
         self.render_grid()
         self.get_first_location()
         self.render_grid()
+
         while (self._running):
             # main menu
             if self.window == 0:
@@ -233,9 +274,9 @@ class App:
             elif self.window == 2:
 
                 for event in pygame.event.get():
-                    self.on_event(event)
-                self.on_loop()
-                self.on_render()
+                    self.game_event(event)
+                self.game_loop()
+                self.game_render()
 
             # loss screen
             elif self.window == 3:
@@ -244,14 +285,15 @@ class App:
             # win screen
             elif self.window == 4:
                 pass
+            self.clock.tick(40)
 
         self.on_cleanup()
 
     def one_loop(self):
         for event in pygame.event.get():
-            self.on_event(event)
-        self.on_loop()
-        self.on_render()
+            self.game_event(event)
+        self.game_loop()
+        self.game_render()
 
 if __name__ == "__main__":
     theApp = App()
