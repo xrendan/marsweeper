@@ -110,8 +110,6 @@ class RNJesus:
                         self.flags +=1
                         progress +=1
 
-
-
         return progress
     def complex(self,alltiles=0):
         '''this is where things get interesting. Now we have to look at
@@ -135,11 +133,6 @@ class RNJesus:
                 for spot in intel[1]:
                     if spot not in covlist:
                         covlist += [spot]
-        '''This doesnt seem to work, lets do something else
-        edgelists = self.getAMD(covlist,possible)
-        remaining_mines = self.mines - self.flags
-        print(edgelists)
-        '''
         #lets do matrix algbra!
         mtx_gen = []
         width = len(covlist)
@@ -254,62 +247,6 @@ class RNJesus:
         return False
         return x-1<=tile[0] and tile[0]<=x+1 and y-1<=tile[1] and tile[1]<=y+1
 
-    def accountedFor(self,victim,edgelists):
-        length = len(edgelists)
-        for spot in range(0,length,2):
-            print(victim)
-            print(edglists[spot])
-            print(victim in edgelists[spot])
-            if victim in edgelists[spot]:
-                return True
-        return False
-    def getAMD(self,covlist,possible):#checks to see if a cell is attached to another cell body
-        #uses breadth first search
-        edgelists = []
-        loc = 0
-        cur_edgelist = []
-        cur_possiblelist = []#we will need to check each element later as we brute force
-        visited = [] #We will never stop without this
-        #que = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
-        que = [covlist[1]]
-        target = 0 #for iterating through the que without having to do more awful list things
-        while target <= len(que):
-            if target == len(que):# we went off the end, time to see if we are done
-                for victim in covlist:
-                    if victim not in cur_edgelist and not self.accountedFor(victim,edgelists):
-                        print("IT WORKS, OR IT DOESNT. BUT YOU GOT HERE, AND THATS ENOUGH FOR ME")
-                        que += [victim]
-                        edgelists += [cur_edgelist,cur_possiblelist] #list of lists in a list
-                        loc+=2
-                        cur_possiblelist = []
-                        cur_edgelist = []
-                        continue #we short cut back around to start searching from this node
-                #so all victims in covlist have been scanned and added
-                edgelists += [cur_edgelist],[cur_possiblelist] #list of lists in a list
-                return edgelists #we finished with this
-            if que[target] in visited:
-                #that was a waste of time
-                pass
-            elif que[target] in covlist:
-                #now we know its attached to this section.
-                cur_edgelist += [que[target]]
-                #we can scan its neighbors
-                tmp = [(x,y) for x in range(max(0,que[target][0]-1),min(self.width,que[target][0]+2))
-                for y in range(max(0,que[target][1]-1),min(self.height,que[target][1]+2))]#list comp is getting out of hand
-                tmp.remove(que[target])# its not as slow when theres only 9 elements.
-                que += tmp
-                visited += [que[target]]
-            elif que[target] in possible:
-                #this cell will need to be checked later when trying solutions
-                cur_possiblelist += [que[target]]
-                #but we need to scan its neighbors, it may be a bridge
-                tmp = [(x,y) for x in range(max(0,que[target][0]-1),min(self.width,que[target][0]+2))
-                for y in range(max(0,que[target][1]-1),min(self.height,que[target][1]+2))]#list comp is getting out of hand
-                tmp.remove(que[target])
-                que += tmp
-                visited += [que[target]]
-            target += 1
-
     def getIntel(self,i,j):
         #finds out information about the surrounding cells
         spots = [(x,y) for x in range(max(0,i-1),min(self.width,i+2)) for y in range(max(0,j-1),min(self.height,j+2))]
@@ -361,10 +298,6 @@ if __name__ == "__main__":
             bored = Board(10,10,mines)
             dumb = RNJesus(10,10,mines,bored.checkCell,bored.setFlag)
             bored.generate(3,3)
-            #print("Actual board")
-            #bored.cmdPrintBoard()
-            #print("\nVisible board")
-            #bored.cmdPrintActiveBoard()
             while bored.checkWinCondition()==0:
                 dumb.attack(bored.getActiveBoard())
             if bored.checkWinCondition() == 1:
