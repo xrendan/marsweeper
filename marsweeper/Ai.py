@@ -1,13 +1,14 @@
 from sympy import *
 import math
 class RNJesus:
-    def __init__(self,width, height, mines,checkCell,setFlag):
+    def __init__(self,width, height, mines,checkCell,setFlag,debug=0):
         #needs reinit when playing a new map
         self.width = width
         self.height = height
         self.mines = mines
         self.flags = 0
         self.numcov = None
+        self.debug = debug
         self.grid = []
         self.memo = []
         self.remotecheckCell = checkCell #this is toxic, but leaves us
@@ -40,25 +41,25 @@ class RNJesus:
                     if self.grid[x][y].state == 0:
                         self.remotesetFlag(x,y)
                         self.flags +=1
+            return 1
         progress = self.simple()
-        print("did simple with progress "+str(progress))
+        if self.debug:
+            print("did simple with progress "+str(progress))
         if progress == -1:
             return 0 #we may have won or lost, but thats not our thing
         elif progress == 0:#we cant move forward with simple, we need to go deeper
             for num in range(2,9):
                 progress = self.simpleExt(num)
-                print("did simpleExt on "+str(num)+" with progress "+str(progress))
+                if self.debug:
+                    print("did simpleExt on "+str(num)+" with progress "+str(progress))
                 if progress:
                     break#chances are as we go up we get less progress
             if not progress:
-                print("Did complex with progress ",end="")
                 progress = self.complex()#this is where things get bad
-                print(progress)
-                if progress:
-                    return
-                else:
-                    #Random!
-                    pass
+                if self.debug:
+                    print("Did complex with progress ",end="")
+                    print(progress)
+                return progress
     def simple(self):
         #We search for ones, and flag/uncover when they provide a deterministic answer
         progress = 0
@@ -199,11 +200,11 @@ class RNJesus:
             return progress
         #Otherwise we go straight into the random alg so we can reuse variables.
         #print(self.mines-self.flags)
-        if self.mines-self.flags < 5 and not alltiles:
-            print("+",end="")
+        if self.mines-self.flags < 5 and not alltiles or len(covlist)==0:
+            if self.debug:
+                print("+",end="")
             return self.complex(1)
         else:
-
             loc = covlist[0]
             (ypos,sign) = self.MagicalPickerOFprobableProbabilities(randi)
             for x in range(0,width):
@@ -227,7 +228,7 @@ class RNJesus:
         y_prob = new_x/num_items
         return x_prob, y_prob
 
-    def MagicalPickerOFprobableProbabilities(self,arr):
+    def MagicalPickerOFprobableProbabilities(self ,arr ):
         masterfulpickersProb = 0
         masterfulpickersNumber = 0
         masterfulpickersSign = 0
@@ -323,47 +324,61 @@ class RNJesus:
                 covered += [spot]
         return [flags,covered]
 
-    def probability(self, x,y,z):
-        num_items = x + y
-        new_x = x - z
-        new_y = y + z
-        x_prob = new_y/num_items
-
-        y_prob = new_x/num_items
-        return x_prob, y_prob
-
-    def MagicalPickerOFprobableProbabilities(arr):
-        masterfulpickersProb = 0
-        masterfulpickersNumber = 0
-        masterfulpickersSign = 0
-        for idx, unworthyitem in enumerate(arr):
-            x,y,z = unworthyitem
-            unworthy_x_prob, unworthy_y_prob = probability(x,y,z)
-            if unworthy_x_prob > masterfulpickersProb:
-                masterfulpickersProb = unworthy_x_prob
-                masterfulpickersNumber = idx
-                masterfulpickersSign = 1
-            if unworthy_y_prob > masterfulpickersProb:
-                masterfulpickersProb = unworthy_y_prob
-                masterfulpickersNumber = idx
-                masterfulpickersSign = -1
-        return masterfulpickersNumber, masterfulpickersSign
 
 if __name__ == "__main__":
     from board import Board
     bored = Board(10,10,20)
     dumb = RNJesus(10,10,20,bored.checkCell,bored.setFlag)#cancer
     bored.generate(3,3)
-    bored.cmdPrintBoard()
-    print("\nActive\n")
-    bored.cmdPrintActiveBoard()
-    while 1:
+    #bored.cmdPrintBoard()
+    #print("\nActive\n")
+    #bored.cmdPrintActiveBoard()
+    wins = 0
+    loses = 0
+    while 0:
         dumb.attack(bored.getActiveBoard())
-        print("\n")
-        bored.cmdPrintActiveBoard()
         if bored.checkWinCondition() == 1:
-            print("WINNER!")
-            break
+            #print("WINNER!")
+            wins +=1
+            bored = Board(10,10,20)
+            dumb = RNJesus(10,10,20,bored.checkCell,bored.setFlag)#cancer
+            bored.generate(3,3)
         elif bored.checkWinCondition() == -1:
-            print("Lost.")
-            break
+            print("currently: "+str(wins)+" wins against "+str(loses)+" loses over "+str(wins+loses)+" games")
+            #bored.cmdPrintBoard()
+            print("\n")
+            #bored.cmdPrintActiveBoard()
+            loses +=1
+            bored = Board(10,10,20)
+            dumb = RNJesus(10,10,20,bored.checkCell,bored.setFlag)#cancer
+            bored.generate(3,3)
+    winlossmtx = []
+    for mines in range(1,40):
+        print("now on mines: "+str(mines))
+        wins = 0
+        loss = 0
+        for rounds in range(50):
+            bored = Board(10,10,mines)
+            dumb = RNJesus(10,10,mines,bored.checkCell,bored.setFlag)
+            bored.generate(3,3)
+            #print("Actual board")
+            #bored.cmdPrintBoard()
+            #print("\nVisible board")
+            #bored.cmdPrintActiveBoard()
+            while bored.checkWinCondition()==0:
+                dumb.attack(bored.getActiveBoard())
+            if bored.checkWinCondition() == 1:
+                wins +=1
+            else:
+                loss +=1
+                '''
+                print("Actual board")
+                bored.cmdPrintBoard()
+                print("\nVisible board")
+                bored.cmdPrintActiveBoard()
+                '''
+        winlossmtx += [(wins,loss)]
+
+    #print(winlossmtx)
+    for line in range(len(winlossmtx)):
+        print("for "+str(line+1)+" mines I won "+str(winlossmtx[line][0])+" and lost "+str(winlossmtx[line][1])+" times")

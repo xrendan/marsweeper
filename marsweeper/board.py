@@ -116,7 +116,7 @@ class Board:
     def getState(self, row, col):
         return self.array[row][col].state
 
-    def checkCell(self, row, col,chkwin=1):
+    def checkCell(self, row, col,chkwin=1,leaf=0):
         if self.array[row][col].state == -1:
             print("Invalid: has flag")
         elif self.array[row][col].state == 1:
@@ -130,13 +130,21 @@ class Board:
         else:
             self.array[row][col].state = 1
             self.uncovered +=1
-            if self.array[row][col].value == 0:
+            if self.array[row][col].value == 0 and not leaf:
                 #we need to try to uncover the surrounding cells
-                spots = [(x,y) for x in range(max(0,row-1),min(self.width,row+2)) for y in range(max(0,col-1),min(self.height,col+2))]
-                #list comp creates a list of the 8 spots around our cur position
-                #that are on the board
-                for spot in spots:
-                    self.checkCell(spot[0],spot[1],0) #recursivly find open spaces and uncover them
+                visited = [(row,col)]
+                pos = 0
+                que = [(x,y) for x in range(max(0,row-1),min(self.width,row+2)) for y in range(max(0,col-1),min(self.height,col+2))if (x,y) not in visited]
+                while pos < len(que):
+                    if (que[pos][0],que[pos][1]) in visited:
+                        pos += 1
+                        continue
+                    self.checkCell(que[pos][0],que[pos][1],0,1)
+                    visited += [(que[pos][0],que[pos][1])]
+                    if self.array[que[pos][0]][que[pos][1]].value == 0:
+                        que += [(x,y) for x in range(max(0,que[pos][0]-1),min(self.width,que[pos][0]+2))
+                        for y in range(max(0,que[pos][1]-1),min(self.height,que[pos][1]+2)) if (x,y) not in visited and (x,y) not in que]
+                    pos +=1
         if self.debug:
             self.cmdPrintActiveBoard()
             # return self.array[row][col].value
@@ -174,7 +182,7 @@ class Board:
         return 0 #if you made it this far you didnt win
 
 if __name__ == '__main__':
-    bored = Board(10,10,25)
+    bored = Board(50,50,2)
     bored.generate(3,3)
     bored.cmdPrintBoard()
     print("\nActive\n")
