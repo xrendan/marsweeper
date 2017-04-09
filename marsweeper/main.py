@@ -72,7 +72,7 @@ class App:
         self._running = True
         self._display_surf = None
         self.size = self.weight, self.height = 1536, 768
-        self.square = 40
+        self.square = 39
         self.margin = 5
         self.grid_colour = (255, 255, 255)
         self.board = None
@@ -95,6 +95,7 @@ class App:
         self.buttons = None
 
     def on_init(self):
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
         pygame.init()
         self._display_surf = pygame.display.set_mode(self.size)
 
