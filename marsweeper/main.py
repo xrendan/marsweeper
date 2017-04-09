@@ -95,7 +95,7 @@ class App:
         self.buttons = None
 
     def on_init(self):
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,0)
         pygame.init()
         self._display_surf = pygame.display.set_mode(self.size)
 
