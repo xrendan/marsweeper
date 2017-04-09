@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from math import floor
 import board
+import Ai
 import os
 
 
@@ -244,11 +245,17 @@ class App:
         self.size = self.weight, self.height
         self._display_surf = pygame.display.set_mode(self.size)
         self.board_init()
+        if self.ai:
+            self.solver = Ai.RNJesus(self.rows,
+                                     self.cols,self.mines,
+                                     self.board.checkCell,
+                                     self.board.setFlag)
         self.render_grid()
         self.get_first_location()
         self.render_grid()
 
     def game_play(self):
+
         for event in pygame.event.get():
             self.game_event(event)
         self.game_loop()
@@ -258,16 +265,20 @@ class App:
         if event.type == pygame.QUIT:
             self._running = False
         if event.type == MOUSEBUTTONDOWN:
-            x, y = event.pos
-            row, col = self.pix_to_grid(x,y)
-            if row == -1 or col == -1:
-                pass
-            elif row > self.rows or col > self.cols:
-                pass
-            elif event.button == 1:
-                self.check_cell(row, col)
-            elif event.button == 3:
-                self.toggle_flag(row,col)
+            if self.ai:
+                self.solver.attack(self.board.getActiveBoard())
+                self.changes = True
+            else:
+                x, y = event.pos
+                row, col = self.pix_to_grid(x,y)
+                if row == -1 or col == -1:
+                    pass
+                elif row > self.rows or col > self.cols:
+                    pass
+                elif event.button == 1:
+                    self.check_cell(row, col)
+                elif event.button == 3:
+                    self.toggle_flag(row,col)
 
     def game_loop(self):
         self.current_time = floor((pygame.time.get_ticks() - self.initial_time) / 1000)
@@ -423,7 +434,6 @@ class App:
 
 
     def on_execute(self):
-
         if self.on_init() == False:
             self._running == False
         pygame.display.set_caption("MARSWEEPER")
