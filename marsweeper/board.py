@@ -162,8 +162,9 @@ class Board:
     def setFlag(self, row, col):
         if self.array[row][col].state == 1:#Its uncovered
             print("you cant flag an uncovered cell")
-        self.array[row][col].state = -1 #the AI is alergic to toggles
-        self.flags_loc += (row,col)
+        if (row, col) not in self.flags_loc:
+            self.array[row][col].state = -1 #the AI is alergic to toggles
+            self.flags_loc.append((row,col))
     def checkWinCondition(self):
         #Did they lose?
         if self.win_condition ==-1:

@@ -16,6 +16,13 @@ class Tiles:
     9 is a flagged tiles
     10 is a mine
     11 is an covered tile
+
+    size is the dimensions of each tile in pixels
+    covoured_colour is the colour of the coloured tiles as an RGB tuple
+    uncovoured_colour is the colour of the uncoloured tiles as an RGB tuple
+    text_tolour: RGB tuple for the text colour
+    transparency: integer from 0-255 repreenting transparency of the tiles
+    font: pygame font object
     '''
     def __init__(self,
                  size,
@@ -23,31 +30,41 @@ class Tiles:
                  uncovered_colour=(125,125,125),
                  text_colour=(0,38,255),
                  transparency=255,
-                 font = None,
-                 texpack=None):
+                 font = None):
 
+        # use supplied font otherwise initialize one
         self.font = font
         self.size = size
         if font == None:
             pygame.font.init()
             self.font = pygame.font.SysFont("monospace", int(self.size*0.75), bold=True)
+
+        # save colours as instance attributes
         self.covered_colour = covered_colour
         self.size = size
         self.uncovered_colour = uncovered_colour
         self.text_colour = text_colour
+
+        # create surface to use as a base
         self.base = pygame.Surface((size,size), SRCALPHA, 32).convert_alpha()
         self.base.set_alpha(transparency)
 
+        # initialize surfaces for covered and uncovered tiles
         self.covered_base = self.base.copy()
         self.covered_base.fill(self.covered_colour)
 
         self.uncovered_base = self.base.copy()
         self.uncovered_base.fill(uncovered_colour)
+
+        # initialize array to store tiles
         self.array = []
         for i in range(12):
             self.array.append(self.uncovered_base.copy())
     def create(self):
-
+        '''
+        generate tiles based on supplied parameters
+        pygame.init() must be called first
+        '''
         for i in range(9):
             number = self.font.render(str(i), False, self.text_colour)
             self.array[i].blit(number, (self.size//4,self.size//8))
@@ -64,61 +81,113 @@ class Tiles:
         self.array[11] = self.covered_base.copy()
 
     def get(self, type):
+        '''
+        get tile object to blit
+        0-8 correspond to tiles with numbers 0-8 on them
+        9 is a flagged tiles
+        10 is a mine
+        11 is an covered tile
+        '''
         return self.array[type]
 
 class App:
+    '''
+    pygame app class, an instance is used to run the marsweeper game
+
+    After initialization run the on_init() and on_execute() methods to play the
+    game.
+
+    Uses pygame to display the data from the board class in board.py
+    Can be played by a player or by an AI
+    '''
 
     def __init__(self):
         self._running = True
+        # surface to contain the menus and board
         self._display_surf = None
+        # dimension of the menu
         self.size = self.weight, self.height = 1536, 768
+
+        # size of tiles in pixels
         self.square = 39
+        # space between tiles in pixels
         self.margin = 5
-        self.grid_colour = (255, 255, 255)
-        self.board = None
-        self.tiles = None
+
+        # grid parameters
         self.rows = 8
         self.cols = 8
-        self.mines = 5
-        self.changes = False
-        self.window = 0
+        self.mines = 10
+
+        # variables for time management, initialized later
         self.initial_time = 0
         self.current_time = 0
         self.clock = None
+
+        # keep track of game state
+        self.window = 0
+
+        # variables for pygame font objects
         self.font = None
         self.small_font = None
-        self.ai = False
 
+        # board to keep track game and play
+        self.board = None
+
+        self.tiles = None
+        # Determine if the AI or player is used
+        self.ai = False
+        # keeps track of graphics changes to improve efficiency
+        self.changes = False
+
+        # menu background picture
         self.menu_background_path = os.path.join("images", "menu_background_big.jpg")
         self.menu_background = None
 
+        #array to contain button location rectangles
         self.buttons = None
 
     def on_init(self):
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,20)
+        '''
+        initialize pygame, fonts, tiles and clo9ck then start the main menu
+        Run this before doing anything else!
+        '''
+
+        # set starting window location to top left corner
+        # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,20)
+
+        # initialize pygame and main display surface
         pygame.init()
         self._display_surf = pygame.display.set_mode(self.size)
 
+        # load background image into memory
         self.menu_background = pygame.image.load(self.menu_background_path).convert()
 
+        #initalize fonts
         pygame.font.init()
         self.font = pygame.font.SysFont("", 120)
         self.small_font = pygame.font.SysFont("", 20)
 
         self._running = True
+
+        # create minesweeper tiles for future use
         self.tiles = Tiles(self.square)
         self.tiles.create()
 
+        # start clock
         self.clock = pygame.time.Clock()
 
+        # speed up pygame event queue by only recognizing mouse input
         pygame.event.set_allowed([MOUSEBUTTONDOWN])
+        self.start_menu()
 
     def board_init(self):
+        '''initialize board class and'''
         self.board = board.Board(self.rows, self.cols, self.mines)
         self.render_grid()
 
     # functions for dealing with main menu
     def start_menu(self):
+        # set up display
         self.size = self.weight, self.height = 1536, 768
         self._display_surf = pygame.display.set_mode(self.size)
 
@@ -159,15 +228,17 @@ class App:
 
     # functions for dealing with the settings menu
     def start_settings(self):
+        # reset display surface
         self.size = self.weight, self.height = 1536, 768
         self._display_surf = pygame.display.set_mode(self.size)
 
         self._display_surf.blit(self.menu_background, (0,0))
 
+        # initialize buttons
         self.buttons = [0] * 7
         play = self.font.render("Play", True, (255,255,255)).convert_alpha()
-        settings = self.font.render("Settings", True, (255,255,255)).convert_alpha()
-        title = self.font.render("MARSWEEPER", True, (255,255,255)).convert_alpha()
+        settings = self.font.render("Main Menu", True, (255,255,255)).convert_alpha()
+        title = self.font.render("SETTINGS", True, (255,255,255)).convert_alpha()
         photo_creds = self.small_font.render("Photo: Flickr/Mark Justinecorea", True, (255,255,255)).convert_alpha()
         ai = self.font.render("AI", True, (255,255,255)).convert_alpha()
         player = self.font.render("Player", True, (255,255,255)).convert_alpha()
@@ -175,6 +246,7 @@ class App:
         medium = self.font.render("Medium", True, (255,255,255)).convert_alpha()
         hard = self.font.render("Hard", True, (255,255,255)).convert_alpha()
 
+        # blit buttons onto display surface
         self.buttons[0] = self._display_surf.blit(play, (100,450))
         self.buttons[1] = self._display_surf.blit(settings, (100,600))
 
@@ -188,6 +260,7 @@ class App:
         self._display_surf.blit(title, (840,150))
         self._display_surf.blit(photo_creds, (1300,750))
 
+        # update screens with buttons
         pygame.display.update()
 
     def settings_menu(self):
@@ -201,6 +274,8 @@ class App:
         if event.type == MOUSEBUTTONDOWN:
             pos = event.pos
 
+
+            # handle buttons in the settings menu
             # play game
             if self.buttons[0].collidepoint(pos):
                 self.window = 2
@@ -287,18 +362,50 @@ class App:
                     self.current_time//60,
                     self.current_time%60,
                     self.mines - len(self.board.flags_loc))
+        print(self.board.flags_loc)
         pygame.display.set_caption(label)
 
         if self.board.checkWinCondition() == 1:
             self.render_grid()
+
+            # wait for mouse click to go to end menu
+            waiting = True
+            while waiting:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self._running = False
+                        waiting = False
+
+                    if event.type == MOUSEBUTTONDOWN:
+                        waiting = False
+
+            # initialize end screen state
             self.window = 3
             self.start_end(True)
+
+            # Don't render the grid over top of the end menu
             self.changes = False
+
 
         if self.board.checkWinCondition() == -1:
             self.render_grid()
+
+            # wait for mouse click to go to end menu
+            waiting = True
+            while waiting:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self._running = False
+                        waiting = False
+
+                    if event.type == MOUSEBUTTONDOWN:
+                        waiting = False
+
+            # initialize end screen state
             self.window = 3
             self.start_end(False)
+
+            # Don't render the grid over top of the end menu
             self.changes = False
 
     def game_render(self):
@@ -316,7 +423,7 @@ class App:
 
         self.buttons = [0] * 2
         play = self.font.render("Play Again", False, (255,255,255)).convert_alpha()
-        exit = self.font.render("Exit", False, (255,255,255)).convert_alpha()
+        exit = self.font.render("Main Menu", False, (255,255,255)).convert_alpha()
         if win:
             title = self.font.render("You Win :D", False, (255,255,255)).convert_alpha()
         else:
@@ -347,21 +454,16 @@ class App:
                 self.start_game()
 
             elif self.buttons[1].collidepoint(pos):
-                self._running = False
-
-
-
-
+                self.window = 0
+                self.start_menu()
 
     def first_click(self, row, col):
         self.board.generate(row, col)
         self.initial_time = pygame.time.get_ticks()
 
     def check_cell(self, row, col):
-#         print(row, col)
         self.board.checkCell(row,col)
         self.changes = True
-#         self.board.cmdPrintActiveBoard()
 
     def toggle_flag(self, row, col):
         self.board.toggleFlag(row,col)
@@ -465,5 +567,5 @@ class App:
 if __name__ == "__main__":
     app = App()
     app.on_init()
-    app.start_menu()
+    # app.start_menu()
     app.on_execute()
