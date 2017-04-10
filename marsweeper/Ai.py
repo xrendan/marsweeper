@@ -7,20 +7,20 @@ class RNJesus:
         self.height = height
         self.mines = mines
         self.flags = 0
-        self.numcov = None
+        self.numcov = 0 #this comment should fix things
         self.debug = debug
         self.grid = []
-        self.memo = []
+        self.memo = [] #For remembering squares we dont need to check
         self.remotecheckCell = checkCell #this is toxic, but leaves us
         self.remotesetFlag = setFlag #no room for cheating
-    def getcovered(self):
+    def getcovered(self):#Gets # of covered squares
         count =0
         for x in range(self.width):
             for y in range(self.height):
                 if self.grid[x][y].state == 0:
                     count +=1
         return count
-    def getflags(self):
+    def getflags(self): #gets number of flags, could be combined with getcovered
         count =0
         for x in range(self.width):
             for y in range(self.height):
@@ -48,8 +48,8 @@ class RNJesus:
         if progress == -1:
             return 0 #we may have won or lost, but thats not our thing
         elif progress == 0:#we cant move forward with simple, we need to go deeper
-            for num in range(2,9):
-                progress = self.simpleExt(num)
+            for num in range(2,9):#we go through the whole range.
+                progress = self.simpleExt(num)#we shouldnt find a 8 but why not try?
                 if self.debug:
                     print("did simpleExt on "+str(num)+" with progress "+str(progress))
                 if progress:
@@ -82,7 +82,7 @@ class RNJesus:
                         progress+=1
                         if win:
                             return win-2
-                    self.memo += targ #we dont need to check this cell anymore
+                    self.memo += [targ] #we dont need to check this cell anymore
         return progress
     def simpleExt(self,num):
         #We search for a given number, and flag/uncover when they provide a deterministic answer
@@ -91,7 +91,7 @@ class RNJesus:
         possible = []
         for x in range(self.width):
             for y in range(self.height):
-                if self.grid[x][y].value == num and (x,y) not in self.memo: #we theft memo
+                if self.grid[x][y].value == num and (x,y) not in self.memo: #if its in memo its got nothing
                     possible += [(x,y)]
 
         for targ in possible:
@@ -102,7 +102,7 @@ class RNJesus:
                     progress +=1
                     if win:
                         return win-2 #we cant deal with this
-                self.memo += targ #we dont need to check this cell anymore
+                self.memo += [targ] #we dont need to check this cell anymore
             if len(intel[1])==num-intel[0]: #if all covered spots or flags
                 if len(intel[1]):#ensuring we have spots to check
                     for spot in intel[1]:
@@ -290,13 +290,13 @@ if __name__ == "__main__":
             dumb = RNJesus(10,10,20,bored.checkCell,bored.setFlag)#cancer
             bored.generate(3,3)
     winlossmtx = []
-    for mines in range(1,40):
+    for mines in range(99,100):
         print("now on mines: "+str(mines))
         wins = 0
         loss = 0
-        for rounds in range(50):
-            bored = Board(10,10,mines)
-            dumb = RNJesus(10,10,mines,bored.checkCell,bored.setFlag)
+        for rounds in range(1000):
+            bored = Board(24,24,mines)
+            dumb = RNJesus(24,24,mines,bored.checkCell,bored.setFlag)
             bored.generate(3,3)
             while bored.checkWinCondition()==0:
                 dumb.attack(bored.getActiveBoard())
