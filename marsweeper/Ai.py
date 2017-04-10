@@ -7,7 +7,7 @@ class RNJesus:
         self.height = height
         self.mines = mines
         self.flags = 0
-        self.numcov = 0 #this comment should fix things
+        self.numcov = 0
         self.debug = debug
         self.grid = []
         self.memo = [] #For remembering squares we dont need to check
@@ -135,8 +135,8 @@ class RNJesus:
                         covlist += [spot]
         #lets do matrix algbra!
         mtx_gen = []
-        width = len(covlist)
-        height = len(possible)
+        width = len(covlist) #matrix is generally width+1 width
+        height = len(possible) #and the hight can be +1
         for posi in possible:#creating a matrix
             temp = []
             for tile in covlist:
@@ -192,7 +192,6 @@ class RNJesus:
         if progress:#If we made a move we stop
             return progress
         #Otherwise we go straight into the random alg so we can reuse variables.
-        #print(self.mines-self.flags)
         if self.mines-self.flags < 5 and not alltiles or len(covlist)==0:
             if self.debug:
                 print("+",end="")
@@ -201,18 +200,16 @@ class RNJesus:
             loc = covlist[0]
             (ypos,sign) = self.MagicalPickerOFprobableProbabilities(randi)
             for x in range(0,width):
-                if mtrx[ypos,x] == sign:
-                    loc = covlist[x]
-                    break
+                if mtrx[ypos,x] == sign:# sure it picks the first one
+                    loc = covlist[x] # but it should have the lowest probablility
+                    break #of being a mine
 
 
             win = self.remotecheckCell(loc[0],loc[1])
             if win:
-                #print()
-                #print(mtrx)
-                return win-40
-        return 0
-    def probability(self, x,y,z):
+                return win-40 #just for error checking, not visable in final project
+        return 0 #guessing doesnt count as progress. It just happens
+    def probability(self, x,y,z):#Sort of magic
         num_items = x + y
         new_x = x - z
         new_y = y + z
@@ -221,7 +218,7 @@ class RNJesus:
         y_prob = new_x/num_items
         return x_prob, y_prob
 
-    def MagicalPickerOFprobableProbabilities(self ,arr ):
+    def MagicalPickerOFprobableProbabilities(self ,arr ):#shell for finding lowst prob
         masterfulpickersProb = 0
         masterfulpickersNumber = 0
         masterfulpickersSign = 0
@@ -272,7 +269,7 @@ if __name__ == "__main__":
     #bored.cmdPrintActiveBoard()
     wins = 0
     loses = 0
-    while 0:
+    while 0:#this loop just keeps playing
         dumb.attack(bored.getActiveBoard())
         if bored.checkWinCondition() == 1:
             #print("WINNER!")
@@ -289,16 +286,16 @@ if __name__ == "__main__":
             bored = Board(10,10,20)
             dumb = RNJesus(10,10,20,bored.checkCell,bored.setFlag)#cancer
             bored.generate(3,3)
-    winlossmtx = []
-    for mines in range(99,100):
+    winlossmtx = [] #this loop is for calculating a specific grid setup
+    for mines in range(99,100): #over a range of mines
         print("now on mines: "+str(mines))
         wins = 0
         loss = 0
-        for rounds in range(1000):
+        for rounds in range(100): #for a number of rounds
             bored = Board(24,24,mines)
             dumb = RNJesus(24,24,mines,bored.checkCell,bored.setFlag)
             bored.generate(3,3)
-            while bored.checkWinCondition()==0:
+            while bored.checkWinCondition()==0:#does solver rounds till it wins or loses
                 dumb.attack(bored.getActiveBoard())
             if bored.checkWinCondition() == 1:
                 wins +=1
