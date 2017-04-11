@@ -29,7 +29,7 @@ class RNJesus:
         return count
     def attack(self,grid):
         '''Causes the AI to go through one 'attack' sequence
-        attempting to mark mines and uncover squares. It may make more than
+        attempting to mark minesn and uncover squares. It may make more than
         one move per 'attack' but it wont solve a whole (nontrivial) board.
         This gives time to render and do other stuff'''
         self.grid = grid #so we dont have to pass it around everywhere
@@ -210,6 +210,9 @@ class RNJesus:
                 return win-40 #just for error checking, not visable in final project
         return 0 #guessing doesnt count as progress. It just happens
     def probability(self, x,y,z):#Sort of magic
+        '''
+        calculate the probability that mines in a row in the matrix are mines
+        '''
         num_items = x + y
         new_x = x - z
         new_y = y + z
@@ -219,23 +222,26 @@ class RNJesus:
         return x_prob, y_prob
 
     def MagicalPickerOFprobableProbabilities(self ,arr ):#shell for finding lowst prob
-        masterfulpickersProb = 0
-        masterfulpickersNumber = 0
-        masterfulpickersSign = 0
-        for idx, unworthyitem in enumerate(arr):
-            x,y,z = unworthyitem
-            unworthy_x_prob, unworthy_y_prob = self.probability(x,y,z)
-            if math.isnan(unworthy_x_prob):
+        '''
+        Finds the row with the lowest probability
+        '''
+        Prob = 1
+        Number = 0
+        Sign = 0
+        for idx, item in enumerate(arr):
+            x,y,z = item
+            x_prob, y_prob = self.probability(x,y,z)
+            if math.isnan(x_prob):
                 break
-            if unworthy_x_prob > masterfulpickersProb:
-                masterfulpickersProb = unworthy_x_prob
-                masterfulpickersNumber = idx
-                masterfulpickersSign = 1
-            if unworthy_y_prob > masterfulpickersProb:
-                masterfulpickersProb = unworthy_y_prob
-                masterfulpickersNumber = idx
-                masterfulpickersSign = -1
-        return masterfulpickersNumber, masterfulpickersSign
+            if x_prob < Prob:
+                Prob = x_prob
+                Number = idx
+                Sign = 1
+            if y_prob < Prob:
+                Prob = y_prob
+                Number = idx
+                Sign = -1
+        return Number, Sign
     def tileInRange(self,posi,tile):
         x = posi[0] - tile[0]
         y = posi[1] - tile[1]
@@ -287,13 +293,13 @@ if __name__ == "__main__":
             dumb = RNJesus(10,10,20,bored.checkCell,bored.setFlag)#cancer
             bored.generate(3,3)
     winlossmtx = [] #this loop is for calculating a specific grid setup
-    for mines in range(99,100): #over a range of mines
+    for mines in range(1,20): #over a range of mines
         print("now on mines: "+str(mines))
         wins = 0
         loss = 0
-        for rounds in range(100): #for a number of rounds
-            bored = Board(24,24,mines)
-            dumb = RNJesus(24,24,mines,bored.checkCell,bored.setFlag)
+        for rounds in range(50): #for a number of rounds
+            bored = Board(10,10,mines)
+            dumb = RNJesus(10,10,mines,bored.checkCell,bored.setFlag)
             bored.generate(3,3)
             while bored.checkWinCondition()==0:#does solver rounds till it wins or loses
                 dumb.attack(bored.getActiveBoard())
