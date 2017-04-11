@@ -181,24 +181,32 @@ class App:
         self.start_menu()
 
     def board_init(self):
-        '''initialize board class and'''
+        '''
+        initialize board class and render covered grid
+        '''
         self.board = board.Board(self.rows, self.cols, self.mines)
         self.render_grid()
 
     # functions for dealing with main menu
     def start_menu(self):
+        '''
+        render main menu and set up buttons
+        '''
+
         # set up display
         self.size = self.weight, self.height = 1536, 768
         self._display_surf = pygame.display.set_mode(self.size)
 
         self._display_surf.blit(self.menu_background, (0,0))
 
+        # set up buttons
         self.buttons = [0] * 2
         play = self.font.render("Play", True, (255,255,255)).convert_alpha()
         settings = self.font.render("Settings", True, (255,255,255)).convert_alpha()
         title = self.font.render("MARSWEEPER", True, (255,255,255)).convert_alpha()
         photo_creds = self.small_font.render("Photo: Flickr/Mark Justinecorea", True, (255,255,255)).convert_alpha()
 
+        # blit buttons onto display surface
         self.buttons[0] = self._display_surf.blit(play, (100,450))
         self.buttons[1] = self._display_surf.blit(settings, (100,600))
         self._display_surf.blit(title, (840,150))
@@ -207,11 +215,18 @@ class App:
         pygame.display.update()
 
     def main_menu(self):
+        '''
+        run main menu loop
+        '''
         for event in pygame.event.get():
             self.main_menu_event(event)
 
 
     def main_menu_event(self, event):
+        '''
+        handle main menu events and buttons
+        '''
+
         if event.type == pygame.QUIT:
             self._running = False
         if event.type == MOUSEBUTTONDOWN:
@@ -228,6 +243,9 @@ class App:
 
     # functions for dealing with the settings menu
     def start_settings(self):
+        '''
+        render the settings menu and set up buttons
+        '''
         # reset display surface
         self.size = self.weight, self.height = 1536, 768
         self._display_surf = pygame.display.set_mode(self.size)
@@ -264,13 +282,22 @@ class App:
         pygame.display.update()
 
     def settings_menu(self):
+        '''
+        run settings menu loop
+        '''
         for event in pygame.event.get():
             self.settings_event(event)
 
 
     def settings_event(self, event):
+        '''
+        handle the events and buttons from the settings menu
+        '''
+
         if event.type == pygame.QUIT:
             self._running = False
+
+        # check to see if the click was on any button
         if event.type == MOUSEBUTTONDOWN:
             pos = event.pos
 
@@ -316,21 +343,36 @@ class App:
 
     # functions for dealing with game play
     def start_game(self):
+        '''
+        initialize the board object and set up the display for game play
+        initialize solver if selected
+        '''
+        # set up window size
         self.weight = self.margin *(self.rows + 1) + self.square*self.rows
         self.height = self.margin *(self.cols + 1) + self.square*self.cols
         self.size = self.weight, self.height
         self._display_surf = pygame.display.set_mode(self.size)
+
+        # initialize board
         self.board_init()
+
+        # initialize solver if selected
         if self.ai:
             self.solver = Ai.RNJesus(self.rows,
                                      self.cols,self.mines,
                                      self.board.checkCell,
                                      self.board.setFlag)
+
         self.render_grid()
+
+        # ask user for initial location so that the board can be generated
         self.get_first_location()
         self.render_grid()
 
     def game_play(self):
+        '''
+        run game play loop
+        '''
 
         for event in pygame.event.get():
             self.game_event(event)
@@ -338,33 +380,52 @@ class App:
         self.game_render()
 
     def game_event(self, event):
+        '''
+        handle game events, hitting tiles or flagging tiles
+        '''
         if event.type == pygame.QUIT:
             self._running = False
         if event.type == MOUSEBUTTONDOWN:
+            # if the ai is active, run an ai action on user click
             if self.ai:
                 self.solver.attack(self.board.getActiveBoard())
                 self.changes = True
+
+            # otherwise get where the user clicked and flag or hit the tile
             else:
                 x, y = event.pos
+                # translate pixel location to grid location
                 row, col = self.pix_to_grid(x,y)
+                # didn't click on a tile
                 if row == -1 or col == -1:
                     pass
+                # clicked past the edge of the grid
                 elif row > self.rows or col > self.cols:
                     pass
+
+                # hit mine on left click
                 elif event.button == 1:
                     self.check_cell(row, col)
+
+                # flag mine on right click
                 elif event.button == 3:
                     self.toggle_flag(row,col)
 
     def game_loop(self):
+        '''
+        check win condition on each loop and update time and flag counter
+        '''
+        # set number of seconds that have passed rounded down
         self.current_time = floor((pygame.time.get_ticks() - self.initial_time) / 1000)
+        # set title of window to contain time and number of flags
         label = "MARSWEEPER - TIME: {}:{} - FLAGS LEFT: {}".format(
                     self.current_time//60,
                     self.current_time%60,
                     self.mines - len(self.board.flags_loc))
-        print(self.board.flags_loc)
         pygame.display.set_caption(label)
 
+        # check if the player has won or lost
+        # player has won
         if self.board.checkWinCondition() == 1:
             self.render_grid()
 
@@ -386,7 +447,7 @@ class App:
             # Don't render the grid over top of the end menu
             self.changes = False
 
-
+        # player has lost
         if self.board.checkWinCondition() == -1:
             self.render_grid()
 
@@ -409,6 +470,9 @@ class App:
             self.changes = False
 
     def game_render(self):
+        '''
+        render the game grid if a change has happened
+        '''
         if self.changes == True:
             self.render_grid()
             self.changes = False
@@ -416,11 +480,17 @@ class App:
 
     # functions for dealing with end menu
     def start_end(self, win):
+        '''
+        initialize the end menu
+        win is a Bool, True if the user won, False on loss
+        '''
+
+        # reset display size to background size and blit background onto it
         self.size = self.weight, self.height = 1536, 768
         self._display_surf = pygame.display.set_mode(self.size)
-
         self._display_surf.blit(self.menu_background, (0,0))
 
+        # intialize buttons
         self.buttons = [0] * 2
         play = self.font.render("Play Again", False, (255,255,255)).convert_alpha()
         exit = self.font.render("Main Menu", False, (255,255,255)).convert_alpha()
@@ -431,7 +501,7 @@ class App:
 
         photo_creds = self.small_font.render("Photo: Flickr/Mark Justinecorea", True, (255,255,255)).convert_alpha()
 
-
+        # blit buttons onto display surface
         self._display_surf.blit(photo_creds, (1300,750))
         self.buttons[0] = self._display_surf.blit(play, (100,450))
         self.buttons[1] = self._display_surf.blit(exit, (100,600))
@@ -440,11 +510,17 @@ class App:
         pygame.display.update()
 
     def end_screen(self):
+        '''
+        run end screen loop
+        '''
         for event in pygame.event.get():
             self.end_event(event)
 
 
     def end_event(self, event):
+        '''
+        handle events and buttons for the end screen
+        '''
         if event.type == pygame.QUIT:
             self._running = False
         if event.type == MOUSEBUTTONDOWN:
@@ -457,26 +533,33 @@ class App:
                 self.window = 0
                 self.start_menu()
 
-    def first_click(self, row, col):
-        self.board.generate(row, col)
-        self.initial_time = pygame.time.get_ticks()
-
     def check_cell(self, row, col):
+        '''
+        hit a cell and signal for the board to be re-rendered
+        '''
         self.board.checkCell(row,col)
         self.changes = True
 
     def toggle_flag(self, row, col):
+        '''
+        toggle a flag and signal for the board to be re-rendered
+        '''
         self.board.toggleFlag(row,col)
         self.changes = True
 
     def render_grid(self):
+        '''
+        render the entire grid
+        '''
         for row in range(self.rows):
             for col in range(self.cols):
-                # print("PRINT")
                 self.render_cell(row,col)
         pygame.display.update()
 
     def render_cell(self, row, col):
+        '''
+        render a cell based on its location
+        '''
         try:
             state = self.board.array[row][col].state
             # tile is covered
@@ -492,6 +575,7 @@ class App:
                     tile = self.tiles.get(10)
                 else:
                     tile = self.tiles.get(temp)
+        # if the tile is initialized render it as covered
         except:
             tile = self.tiles.get(11)
 
@@ -501,9 +585,15 @@ class App:
 
 
     def on_cleanup(self):
+        '''
+        quit the game and cleanup pygame
+        '''
         pygame.quit()
 
     def pix_to_grid(self, x, y):
+        '''
+        translate pixel location to grid location
+        '''
         width = (self.square + self.margin)
 
         temp = x % width
@@ -519,6 +609,9 @@ class App:
         return row, col
 
     def get_first_location(self):
+        '''
+        Generate the board based on where the user clicks first
+        '''
         not_done = True
         while not_done:
             for event in pygame.event.get():
@@ -532,11 +625,15 @@ class App:
                     elif row > self.rows or col > self.cols:
                         pass
                     else:
+                        self.initial_time = pygame.time.get_ticks()
                         self.board.generate(row,col)
                         not_done = False
 
 
     def on_execute(self):
+        '''
+        Run the program and deal with cleanup when done
+        '''
         if self.on_init() == False:
             self._running == False
         pygame.display.set_caption("MARSWEEPER")
