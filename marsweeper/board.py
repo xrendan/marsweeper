@@ -154,14 +154,14 @@ class Board:
     def toggleFlag(self, row, col):
         if self.array[row][col].state == -1:#flags or unflags a spot
             self.array[row][col].state = 0
-            print("if it just crashed you already know why")
             self.flags_loc.remove((row,col))
         elif self.array[row][col].state == 0:
             self.array[row][col].state = -1
             self.flags_loc.append((row,col))
     def setFlag(self, row, col):
         if self.array[row][col].state == 1:#Its uncovered
-            print("you cant flag an uncovered cell")
+            # print("you cant flag an uncovered cell")
+            pass
         if (row, col) not in self.flags_loc:
             self.array[row][col].state = -1 #the AI is alergic to toggles
             self.flags_loc.append((row,col))

@@ -109,7 +109,7 @@ class App:
         self.size = self.weight, self.height = 1536, 768
 
         # size of tiles in pixels
-        self.square = 39
+        self.square = 60
         # space between tiles in pixels
         self.margin = 5
 
@@ -617,6 +617,7 @@ class App:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self._running = False
+                    not_done = False
                 if event.type == MOUSEBUTTONDOWN:
                     x, y = event.pos
                     row, col = self.pix_to_grid(x,y)
