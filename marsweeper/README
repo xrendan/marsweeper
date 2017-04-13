@@ -1,0 +1,27 @@
+Running the project:
+You will need to install sympy and pygame for this program to function properly.
+pip3 install pygame
+pip3 install sympy
+You may require administrative permissions or sudo as per your operating system.
+With the dependencies installed call python3 on main.py to access the GUI
+Use the settings button to switch between the 3 preset difficulty levels and
+switch between player and AI mode. In player mode left click a tile to uncover it,
+right click to flag a tile as a mine.
+On winning click once to continue.
+In AI mode you must select the first square for the AI to play from by clicking.
+Clicking after that causes the AI to go through once sequence of attempting to solve
+the board. On win or loss click once more to complete the game.
+
+Layout:
+board.py contains all code relating to tracking a game of minesweeper, including
+storing the board and deciding whether a win or a loss has occurred.
+calling board.py directly will cause it to create a large board for stress testing.
+It has no interactivity.
+Ai.py contains all the code required for the Ai to solve a grid of minesweeper.
+It does not include the board class, and instead interfaces using only checkCell and setFlag
+as to prevent any cheating. calling Ai.py directly will result in a large test
+of the ai on a fixed grid size with variable mines, outputting winrates to the
+terminal.
+main.py is the main file containing the graphical front end and all user level
+game logic. calling it directly starts the game.
+the images directory contains the back ground image used in the graphics.

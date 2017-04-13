@@ -191,12 +191,12 @@ class RNJesus:
                         progress+=1
         if progress:#If we made a move we stop
             return progress
-        #Otherwise we go straight into the random alg so we can reuse variables.
-        if self.mines-self.flags < 5 and not alltiles or len(covlist)==0:
+        #we do a recurse on all the tiles instead of just edge tiles if it would be logical
+        if (self.mines-self.flags < 5 and not alltiles) or len(covlist)==0:
             if self.debug:
                 print("+",end="")
-            return self.complex(1)
-        else:
+            return self.complex(1)#there is an infinite recursion bug here that happens super rarely. Ill fix it if I have time
+        else:#Otherwise we go straight into the random alg so we can reuse variables.
             loc = covlist[0]
             (ypos,sign) = self.MagicalPickerOFprobableProbabilities(randi)
             for x in range(0,width):
